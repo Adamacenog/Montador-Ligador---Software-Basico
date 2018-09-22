@@ -19,7 +19,7 @@ OBJ2 = $(patsubst %,$(ODIR)/%,$(_OBJ2))
 $(ODIR)/%.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-all: montador ligador
+all: clean montador ligador
 
 montador: $(OBJ)
 	gcc -std=c99 -o $@ $^ $(CFLAGS) $(LIBS)
