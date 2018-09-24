@@ -22,6 +22,15 @@ int main(int argc, char *argv[])
   {
     preProcess *asmFile;
     asmFile = DoPreProcess(argv);
+
+    while(asmFile->nextLine != NULL)
+    {
+      printf("%s\n", asmFile->Program);
+      asmFile = asmFile->nextLine;
+      free(asmFile->previousLine);
+    }
+    printf("%s\n", asmFile->Program);
+    free(asmFile);
   }
   else
   {
@@ -34,9 +43,9 @@ int main(int argc, char *argv[])
 preProcess* DoPreProcess(char **name)
 {
   FILE *asmFile;
-  preProcess *asmContent = NULL, *contentAux = NULL, *contentCreator = NULL;
-  int lineCount = 1, preProcessItem = 0, i=0;
-  char asmFileName[100], fileItem, fileString[100];
+  preProcess *asmContent = NULL, *contentCreator = NULL;
+  int lineCount = 1, locationCount = 0, i=0, j=0;
+  char asmFileName[100], fileItem, fileString[3][100];
 
   // Adicionando o '.asm' no nome do arquivo
   strcpy(asmFileName,name[1]);
@@ -50,15 +59,14 @@ preProcess* DoPreProcess(char **name)
     exit(1);
   }
 
-// Criação da lista de itens pre-processados
-asmContent = (preProcess *) malloc(sizeof(preProcess));
-asmContent->nextLine = NULL;
-asmContent->previousLine = NULL;
-contentAux = asmContent;
-
 // Limpar por completo a string fileString
-for(i = 0; i < 100; i++)
-  fileString[i] = '\0';
+for(i = 0; i < 4; i++)
+  for(j = 0; j < 100; j++)
+    fileString[i][j] = '\0';
+
+// Resetar os valores de i e j
+i = 0;
+j = 0;
 
 // Leitura de caracter em caracter do arquivo.
 while ((fileItem = fgetc(asmFile)) != EOF)
@@ -72,49 +80,74 @@ while ((fileItem = fgetc(asmFile)) != EOF)
   // Contador de linhas do programa e criação de um novo item da lista
   if((char) fileItem == '\n')
   {
+    // Se tiver algo na string do arquivo
+    if(fileString[0][0] != '\0')
+    {
+      // Criação da lista de itens pre-processados
+      contentCreator = (preProcess *) malloc(sizeof(preProcess));
+      if(asmContent == NULL)
+      {
+        asmContent = contentCreator;
+        asmContent->nextLine = NULL;
+        asmContent->previousLine = NULL;
+      }
+      else
+      {
+        contentCreator->previousLine = asmContent;
+        asmContent->nextLine = contentCreator;
+        asmContent = contentCreator;
+        asmContent->nextLine = NULL;
+      }
+
+      asmContent->Program[0] = '\0';
+      for(i = 0; i<4; i++)
+      {
+        if(fileString[i][0] != '\0')
+        {
+          strcat(asmContent->Program, fileString[i]);
+          strcat(asmContent->Program, " \0");
+        }
+      }
+      asmContent->LineCounter = lineCount;
+      asmContent->LocationCounter = locationCount;
+    }
+
+    // Prox - linha
     lineCount++;
-    preProcessItem = 0;
+
+    // Limpar por completo a string fileString
+    for(i = 0; i < 4; i++)
+      for(j = 0; j < 100; j++)
+        fileString[i][j] = '\0';
+
+    i = 0;
+    j = 0;
   }
 
-  // Remoção de tabs e espaços
+  // Remoção de tabs, espaços e novas linhas
   if((char) fileItem != 0x20 && (char) fileItem != 0x09 && (char) fileItem != '\n')
   {
-    fileString[i] = (char) fileItem;
-    i++;
+    fileString[i][j] = (char) fileItem;
+    j++;
   }
   else
   {
-    if(fileString[0] != '\0')
+    if(fileString[i][0] != '\0')
     {
-      printf("%s\n", fileString);
-
-      // Opcode, diretiva ou label
-      if(preProcessItem == 0)
+      if(i < 4)
       {
-
-      }
-      // opt1
-      else if(preProcessItem == 1)
-      {
-
-        preProcessItem++;
-      }
-      // opt2
-      else if(preProcessItem == 2)
-      {
-
+        i++;
+        locationCount++;
       }
     }
-
-    // Limpar por completo a string fileString
-    for(i = 0; i < 100; i++)
-      fileString[i] = '\0';
-
-    i = 0;
+    j = 0;
   }
 }
 
-  fclose(asmFile);
+fclose(asmFile);
 
-  return asmContent;
+while(asmContent->previousLine != NULL)
+  asmContent = asmContent->previousLine;
+
+return asmContent;
 }

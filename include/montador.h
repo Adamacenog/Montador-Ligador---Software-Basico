@@ -6,11 +6,7 @@ Jônatas Senna - mat.
 
 typedef struct PreProcess
 {
-    char Label[100];
-    char Opcode[8];
-    char Directive[8];
-    char Op1[100];
-    char Op2[100];
+    char Program[308];
     int LineCounter;
     int LocationCounter;
     struct PreProcess *nextLine, *previousLine;
