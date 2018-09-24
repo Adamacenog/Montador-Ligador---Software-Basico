@@ -16,6 +16,7 @@ typedef struct EquTable
 {
   char Label[100];
   int Value;
+  struct EquTable *nextItem, *previousItem;
 }equTable;
 
 preProcess* DoPreProcess(char **);

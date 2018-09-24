@@ -9,6 +9,7 @@ Jônatas Senna - mat.
     #include <stdio.h>
     #include <stdlib.h>
     #include <string.h>
+    #include <ctype.h>
 #endif
 
 #ifndef _Montador_library
@@ -25,11 +26,11 @@ int main(int argc, char *argv[])
 
     while(asmFile->nextLine != NULL)
     {
-      printf("%s\n", asmFile->Program);
+      printf("%s : LineCounter: %d, LocationCounter: %d\n", asmFile->Program, asmFile->LineCounter, asmFile->LocationCounter);
       asmFile = asmFile->nextLine;
       free(asmFile->previousLine);
     }
-    printf("%s\n", asmFile->Program);
+    printf("%s : LineCounter: %d, LocationCounter: %d\n", asmFile->Program, asmFile->LineCounter, asmFile->LocationCounter);
     free(asmFile);
   }
   else
@@ -44,7 +45,8 @@ preProcess* DoPreProcess(char **name)
 {
   FILE *asmFile;
   preProcess *asmContent = NULL, *contentCreator = NULL;
-  int lineCount = 1, locationCount = 0, i=0, j=0;
+  equTable *tableEqu = NULL, *tableCreator = NULL, *tableAux = NULL, *tableHead = NULL;
+  int lineCount = 1, locationCount = 0, i=0, j=0, removeLine = 0, wasEqu = 0;
   char asmFileName[100], fileItem, fileString[3][100];
 
   // Adicionando o '.asm' no nome do arquivo
@@ -71,6 +73,9 @@ j = 0;
 // Leitura de caracter em caracter do arquivo.
 while ((fileItem = fgetc(asmFile)) != EOF)
 {
+  // Bota todos os caracteres em maiúsculo
+  fileItem = toupper(fileItem);
+
   // Remoção dos comentários
   if((char) fileItem == ';')
   {
@@ -80,8 +85,8 @@ while ((fileItem = fgetc(asmFile)) != EOF)
   // Contador de linhas do programa e criação de um novo item da lista
   if((char) fileItem == '\n')
   {
-    // Se tiver algo na string do arquivo
-    if(fileString[0][0] != '\0')
+    // Se tiver algo na string do arquivo e a quantidade de linhas ignoradas for zero
+    if(fileString[0][0] != '\0' && removeLine == 0)
     {
       // Criação da lista de itens pre-processados
       contentCreator = (preProcess *) malloc(sizeof(preProcess));
@@ -112,6 +117,10 @@ while ((fileItem = fgetc(asmFile)) != EOF)
       asmContent->LocationCounter = locationCount;
     }
 
+    // Caso alguma linha tenha sido ignorada
+    if(removeLine != 0)
+      removeLine--; // Remove o contador de linha ignorada
+
     // Prox - linha
     lineCount++;
 
@@ -134,6 +143,39 @@ while ((fileItem = fgetc(asmFile)) != EOF)
   {
     if(fileString[i][0] != '\0')
     {
+      if(wasEqu == 1)
+      {
+        // VALUE NÃO ESTÁ APARECENDO (não esta sendo lido?)!! VERIFICAR
+        char *ptr;
+        tableEqu->Value = strtol(fileString[i],&ptr,10);
+        wasEqu = 0;
+      }
+
+      if(strcmp(fileString[i], "EQU") == 0)
+      {
+        removeLine = 1;
+
+        // Criação da tabela de itens 'equ'
+        tableCreator = (equTable *) malloc(sizeof(equTable));
+
+        if(tableEqu == NULL)
+        {
+          tableEqu = tableCreator;
+          tableHead = tableEqu;
+          tableEqu->nextItem = NULL;
+          tableEqu->previousItem = NULL;
+        }
+        else
+        {
+          tableCreator->nextItem = NULL;
+          tableCreator->previousItem = tableEqu;
+          tableEqu->nextItem = tableCreator;
+          tableEqu = tableCreator;
+        }
+        strcpy(tableEqu->Label, fileString[i-1]);
+        wasEqu = 1;
+      }
+
       if(i < 4)
       {
         i++;
@@ -143,6 +185,14 @@ while ((fileItem = fgetc(asmFile)) != EOF)
     j = 0;
   }
 }
+
+tableAux = tableHead;
+while(tableAux != NULL)
+{
+  printf("Label: %s, Value: %d\n", tableAux->Label, tableAux->Value);
+  tableAux = tableAux->nextItem;
+}
+printf("\n");
 
 fclose(asmFile);
 
