@@ -6,7 +6,7 @@ Jônatas Senna - mat.
 
 typedef struct PreProcess
 {
-    char Program[308];
+    char Program[400];
     int LineCounter;
     int LocationCounter;
     struct PreProcess *nextLine, *previousLine;
