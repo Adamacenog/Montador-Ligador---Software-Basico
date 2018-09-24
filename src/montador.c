@@ -34,8 +34,9 @@ int main(int argc, char *argv[])
 preProcess* DoPreProcess(char **name)
 {
   FILE *asmFile;
-  preProcess *asmContent = NULL;
-  char asmFileName[100], fileItem;
+  preProcess *asmContent = NULL, *contentAux = NULL, *contentCreator = NULL;
+  int lineCount = 1, preProcessItem = 0, i=0;
+  char asmFileName[100], fileItem, fileString[100];
 
   // Adicionando o '.asm' no nome do arquivo
   strcpy(asmFileName,name[1]);
@@ -49,12 +50,69 @@ preProcess* DoPreProcess(char **name)
     exit(1);
   }
 
-  // Leitura de caracter em caracter do arquivo.
-  while ((fileItem = fgetc(asmFile)) != EOF)
+// Criação da lista de itens pre-processados
+asmContent = (preProcess *) malloc(sizeof(preProcess));
+asmContent->nextLine = NULL;
+asmContent->previousLine = NULL;
+contentAux = asmContent;
+
+// Limpar por completo a string fileString
+for(i = 0; i < 100; i++)
+  fileString[i] = '\0';
+
+// Leitura de caracter em caracter do arquivo.
+while ((fileItem = fgetc(asmFile)) != EOF)
+{
+  // Remoção dos comentários
+  if((char) fileItem == ';')
   {
-    if((char) fileItem != 0x20 && (char) fileItem != 0x09)
-      printf("%c",(char) fileItem);
+    while((fileItem = fgetc(asmFile)) != '\n' && fileItem!= EOF);
   }
+
+  // Contador de linhas do programa e criação de um novo item da lista
+  if((char) fileItem == '\n')
+  {
+    lineCount++;
+    preProcessItem = 0;
+  }
+
+  // Remoção de tabs e espaços
+  if((char) fileItem != 0x20 && (char) fileItem != 0x09 && (char) fileItem != '\n')
+  {
+    fileString[i] = (char) fileItem;
+    i++;
+  }
+  else
+  {
+    if(fileString[0] != '\0')
+    {
+      printf("%s\n", fileString);
+
+      // Opcode, diretiva ou label
+      if(preProcessItem == 0)
+      {
+
+      }
+      // opt1
+      else if(preProcessItem == 1)
+      {
+
+        preProcessItem++;
+      }
+      // opt2
+      else if(preProcessItem == 2)
+      {
+
+      }
+    }
+
+    // Limpar por completo a string fileString
+    for(i = 0; i < 100; i++)
+      fileString[i] = '\0';
+
+    i = 0;
+  }
+}
 
   fclose(asmFile);
 
