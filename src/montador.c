@@ -20,16 +20,43 @@ int main(int argc, char *argv[])
 {
   if(argc == 2)
   {
-    printf("O arquivo '.asm' fornecido foi: %s\n", argv[1]);
-  }
-  else if(argc > 2)
-  {
-    printf("ERRO: Muitos arquivos passados, é possível montar apenas um arquivo '.asm' por vez.\n");
+    preProcess *asmFile;
+    asmFile = DoPreProcess(argv);
   }
   else
   {
-    printf("ERRO: Ao menos um arquivo '.asm' é esperado.\n");
+    printf("ERRO: Um arquivo '.asm' é esperado.\n");
   }
 
   return 0;
+}
+
+preProcess* DoPreProcess(char **name)
+{
+  FILE *asmFile;
+  preProcess *asmContent = NULL;
+  char asmFileName[100], fileItem;
+
+  // Adicionando o '.asm' no nome do arquivo
+  strcpy(asmFileName,name[1]);
+  strcat(asmFileName,".asm");
+
+  // Abertura do arquivo '.asm'
+  asmFile = fopen(asmFileName,"r");
+  if(asmFile == NULL)
+  {
+    printf("ERRO: Arquivo não encontrado\n");
+    exit(1);
+  }
+
+  // Leitura de caracter em caracter do arquivo.
+  while ((fileItem = fgetc(asmFile)) != EOF)
+  {
+    if((char) fileItem != 0x20 && (char) fileItem != 0x09)
+      printf("%c",(char) fileItem);
+  }
+
+  fclose(asmFile);
+
+  return asmContent;
 }
