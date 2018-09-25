@@ -26,12 +26,15 @@ int main(int argc, char *argv[])
 
     while(asmFile->nextLine != NULL)
     {
-      printf("%s : LineCounter: %d, LocationCounter: %d\n", asmFile->Program, asmFile->LineCounter, asmFile->LocationCounter);
+      printf("%s : LineCounter: %d\n", asmFile->Program, asmFile->LineCounter);
       asmFile = asmFile->nextLine;
-      free(asmFile->previousLine);
     }
-    printf("%s : LineCounter: %d, LocationCounter: %d\n", asmFile->Program, asmFile->LineCounter, asmFile->LocationCounter);
-    free(asmFile);
+    printf("%s : LineCounter: %d\n", asmFile->Program, asmFile->LineCounter);
+
+    while(asmFile->previousLine != NULL)
+      asmFile = asmFile->previousLine;
+
+    DeletaPreProcess(&asmFile);
   }
   else
   {
@@ -45,8 +48,8 @@ preProcess* DoPreProcess(char **name)
 {
   FILE *asmFile;
   preProcess *asmContent = NULL;
-  equTable *tableEqu = NULL, *tableCreator = NULL, *tableAux = NULL, *tableHead = NULL;
-  int lineCount = 1, locationCount = 0, i=0, removeLine = 0, wasEqu = 0, wasIf = 0;
+  equTable *tableHead = NULL;
+  int lineCount = 1, i=0, removeLine = 0, wasEqu = 0, wasIf = 0;
   char asmFileName[100], fileItem, fileString[100], saveFile[400];
 
   // Adicionando o '.asm' no nome do arquivo
@@ -61,142 +64,111 @@ preProcess* DoPreProcess(char **name)
     exit(1);
   }
 
-// Limpar por completo a string fileString e saveFile
-for(i = 0; i < 100; i++)
-{
-  fileString[i] = '\0';
-  saveFile[i] = '\0';
-}
-
-for(i = 100; i < 400; i++)
-  saveFile[i] = '\0';
-
-// Resetar os valores de i
-i = 0;
-
-// Leitura de caracter em caracter do arquivo.
-while ((fileItem = fgetc(asmFile)) != EOF)
-{
-  // Bota todos os caracteres em maiúsculo
-  fileItem = toupper(fileItem);
-
-  // Remoção dos comentários
-  if(fileItem == ';')
+  // Limpar por completo a string fileString e saveFile
+  for(i = 0; i < 100; i++)
   {
-    while((fileItem = fgetc(asmFile)) != '\n' && fileItem!= EOF);
+    fileString[i] = '\0';
+    saveFile[i] = '\0';
   }
 
-  // Remoção de tabs, espaços e novas linhas
-  if(fileItem != 0x20 && fileItem != 0x09 && fileItem != '\n' && fileItem != ':')
+  for(i = 100; i < 400; i++)
+    saveFile[i] = '\0';
+
+  // Resetar os valores de i
+  i = 0;
+
+  // Leitura de caracter em caracter do arquivo.
+  while ((fileItem = fgetc(asmFile)) != EOF)
   {
-      fileString[i] =  fileItem;
-      i++;
-  }
-  else
-  {
-    // Caso tenha tido algum EQU no codigo
-    if(wasEqu == 1)
+    // Bota todos os caracteres em maiúsculo
+    fileItem = toupper(fileItem);
+
+    // Remoção dos comentários
+    if(fileItem == ';')
     {
-      char *ptr;
-      tableEqu->Value = strtol(fileString,&ptr,10);
-      wasEqu = 0;
+      while((fileItem = fgetc(asmFile)) != '\n' && fileItem!= EOF);
     }
 
-    // Caso tenha tido algum IF no codigo
-    if(wasIf == 1)
+    // Remoção de tabs, espaços e novas linhas
+    if(fileItem != 0x20 && fileItem != 0x09 && fileItem != '\n' && fileItem != ':')
     {
-      char *ptr;
-      IsInEqu(tableHead, fileString);
-      if(strtol(fileString,&ptr,10) != 1)
-        removeLine = 2; // remove a linha do 'if' e a linha abaixo dele
-      wasIf = 0;
+        fileString[i] =  fileItem;
+        i++;
     }
-
-    if(strcmp(fileString, "") != 0)
+    else
     {
-      if(strcmp(fileString, "EQU") == 0)
+      // Caso tenha tido algum EQU no codigo
+      if(wasEqu == 1)
       {
-        removeLine = 1;
+        char *ptr;
+        AddValueEquTable(tableHead, strtol(fileString,&ptr,10));
+        wasEqu = 0;
+      }
 
-        // Criação da tabela de itens 'equ'
-        tableCreator = (equTable *) malloc(sizeof(equTable));
+      // Caso tenha tido algum IF no codigo
+      if(wasIf == 1)
+      {
+        char *ptr;
+        IsInEqu(tableHead, fileString);
+        if(strtol(fileString,&ptr,10) != 1)
+          removeLine = 2; // remove a linha do 'if' e a linha abaixo dele
+        wasIf = 0;
+      }
 
-        if(tableEqu == NULL)
+      if(strcmp(fileString, "") != 0)
+      {
+        if(strcmp(fileString, "EQU") == 0)
         {
-          tableEqu = tableCreator;
-          tableHead = tableEqu;
-          tableEqu->nextItem = NULL;
-          tableEqu->previousItem = NULL;
-        }
-        else
-        {
-          tableCreator->nextItem = NULL;
-          tableCreator->previousItem = tableEqu;
-          tableEqu->nextItem = tableCreator;
-          tableEqu = tableCreator;
+          AddLabelEquTable(&tableHead, saveFile);
+          removeLine = 1;
+          wasEqu = 1;
         }
 
-        // Remoção de tabs e espaços
-        RemoveChar(0x20, saveFile);
-        RemoveChar(0x09, saveFile);
-        strcpy(tableEqu->Label, saveFile);
-        wasEqu = 1;
+        if(strcmp(fileString, "IF") == 0)
+        {
+          wasIf = 1;
+          removeLine = 1;
+        }
+
+        IsInEqu(tableHead, fileString);
+        strcat(saveFile, fileString);
+        strcat(saveFile, " ");
       }
 
-      if(strcmp(fileString, "IF") == 0)
+      // Contador de linhas do programa e criação de um novo item da lista
+      if(fileItem == '\n')
       {
-        wasIf = 1;
-        removeLine = 1;
+        // Se tiver algo na string do arquivo e a quantidade de linhas ignoradas for zero
+        if(saveFile[0] != '\0' && removeLine == 0)
+        {
+          AddPreProcess(&asmContent, saveFile, lineCount);
+        }
+
+        // Caso alguma linha tenha sido ignorada
+        if(removeLine != 0)
+          removeLine--; // Remove o contador de linha ignorada
+
+        // Prox - linha
+        lineCount++;
+
+        // Limpar por completo a string saveFile
+        for(i = 0; i < 400; i++)
+          saveFile[i] = '\0';
       }
 
-      locationCount++;
-      IsInEqu(tableHead, fileString);
-      strcat(saveFile, fileString);
-      strcat(saveFile, " ");
+      // Apaga toda string do fileString
+      for(i=0; i<100; i++)
+        fileString[i] = '\0';
+
+      i = 0;
     }
-
-    // Contador de linhas do programa e criação de um novo item da lista
-    if(fileItem == '\n')
-    {
-      // Se tiver algo na string do arquivo e a quantidade de linhas ignoradas for zero
-      if(saveFile[0] != '\0' && removeLine == 0)
-      {
-        AddPreProcess(&asmContent, saveFile, lineCount, locationCount);
-      }
-
-      // Caso alguma linha tenha sido ignorada
-      if(removeLine != 0)
-        removeLine--; // Remove o contador de linha ignorada
-
-      // Prox - linha
-      lineCount++;
-
-      // Limpar por completo a string saveFile
-      for(i = 0; i < 400; i++)
-        saveFile[i] = '\0';
-    }
-
-    // Apaga toda string do fileString
-    for(i=0; i<100; i++)
-      fileString[i] = '\0';
-
-    i = 0;
   }
-}
 
-tableAux = tableHead;
-while(tableAux != NULL)
-{
-  printf("Label: %s, Value: %d\n", tableAux->Label, tableAux->Value);
-  tableAux = tableAux->nextItem;
-}
-printf("\n");
+  fclose(asmFile);
+  PrintPreProcess(asmContent, name);
+  DeletaEquTable(&tableHead);
 
-fclose(asmFile);
-
-PrintPreProcess(asmContent, name);
-
-return asmContent;
+  return asmContent;
 }
 
 void IsInEqu(equTable *EquHead, char *item)
@@ -231,13 +203,16 @@ void RemoveChar(char removeChar, char *item)
     for(i = 99; i>0; i--)
     {
       if(item[i] == removeChar)
+      {
         item[i] = '\0';
+        break;
+      }
     }
   }
 }
 
 // Adiciona ao fim da lista PreProcess (ou cria a lista caso seja NULL)
-void AddPreProcess(preProcess **preProcessHead, char *saveFile, int lineCount, int locationCount)
+void AddPreProcess(preProcess **preProcessHead, char *saveFile, int lineCount)
 {
   preProcess *contentCreator, *lastElem;
 
@@ -263,26 +238,73 @@ void AddPreProcess(preProcess **preProcessHead, char *saveFile, int lineCount, i
 
   strcpy(contentCreator->Program, saveFile);
   contentCreator->LineCounter = lineCount;
-  contentCreator->LocationCounter = locationCount;
 }
 
 // Deleta toda a lista PreProcess
-/*void DeletaPreProcess(preProcess**)
+void DeletaPreProcess(preProcess **preProcessHead)
 {
+  preProcess *aux;
 
+  while(*preProcessHead != NULL)
+  {
+    aux = *preProcessHead;
+    *preProcessHead = (*preProcessHead)->nextLine;
+    free(aux);
+  }
 }
 
 // Adiciona ao fim da lista EquTable (ou cria a lista caso seja NULL)
-void AddEquTable(equTable**, char *, int)
+void AddLabelEquTable(equTable **tableHead, char *saveFile)
 {
+  equTable *tableCreator = NULL, *tableAux = NULL;
 
+  // Criação da tabela de itens 'equ'
+  tableCreator = (equTable *) malloc(sizeof(equTable));
+
+  if(*tableHead == NULL)
+  {
+    *tableHead = tableCreator;
+    tableCreator->nextItem = NULL;
+    tableCreator->previousItem = NULL;
+  }
+  else
+  {
+    tableAux = (*tableHead);
+    while(tableAux->nextItem != NULL)
+      tableAux = tableAux->nextItem;
+
+    tableCreator->nextItem = NULL;
+    tableCreator->previousItem = tableAux;
+    tableAux->nextItem = tableCreator;
+  }
+
+  // Remoção de tabs e espaços
+  RemoveChar(0x20, saveFile);
+  RemoveChar(0x09, saveFile);
+  strcpy(tableCreator->Label, saveFile);
+}
+
+// Seta o valor do fim da lista EquTable
+void AddValueEquTable(equTable *tableHead, int value)
+{
+  while(tableHead->nextItem != NULL)
+    tableHead = tableHead->nextItem;
+
+  tableHead->Value = value;
 }
 
 // Deleta toda a lista EquTable
-void DeletaEquTable(equTable**)
+void DeletaEquTable(equTable **tableHead)
 {
+  equTable *aux;
 
-}*/
+  while(*tableHead != NULL)
+  {
+    aux = *tableHead;
+    *tableHead = (*tableHead)->nextItem;
+    free(aux);
+  }
+}
 
 // Imprime todo conteudo da lista preProcess em um arquivo nome.pre
 void PrintPreProcess(preProcess *preProcessHead, char **name)

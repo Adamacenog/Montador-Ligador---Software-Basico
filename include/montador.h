@@ -8,7 +8,6 @@ typedef struct PreProcess
 {
     char Program[400];
     int LineCounter;
-    int LocationCounter;
     struct PreProcess *nextLine, *previousLine;
 } preProcess;
 
@@ -22,8 +21,9 @@ typedef struct EquTable
 preProcess* DoPreProcess(char **);
 void IsInEqu(equTable*, char *);
 void RemoveChar(char, char *);
-void AddPreProcess(preProcess**, char *, int, int); // Adiciona ao fim da lista PreProcess (ou cria a lista caso seja NULL)
-//void DeletaPreProcess(preProcess**); // Deleta toda a lista PreProcess
-//void AddEquTable(equTable**, char *, int); // Adiciona ao fim da lista EquTable (ou cria a lista caso seja NULL)
-//void DeletaEquTable(equTable**); // Deleta toda a lista EquTable
+void AddPreProcess(preProcess**, char *, int); // Adiciona ao fim da lista PreProcess (ou cria a lista caso seja NULL)
+void DeletaPreProcess(preProcess**); // Deleta toda a lista PreProcess
+void AddLabelEquTable(equTable**, char *); // Adiciona ao fim da lista EquTable (ou cria a lista caso seja NULL)
+void AddValueEquTable(equTable *, int); // Seta o valor do fim da lista EquTable
+void DeletaEquTable(equTable**); // Deleta toda a lista EquTable
 void PrintPreProcess(preProcess*, char**); // Imprime todo conteudo da lista preProcess em um arquivo nome.pre
