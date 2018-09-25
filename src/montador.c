@@ -86,13 +86,11 @@ while ((fileItem = fgetc(asmFile)) != EOF)
     while((fileItem = fgetc(asmFile)) != '\n' && fileItem!= EOF);
   }
 
-
-
   // Remoção de tabs, espaços e novas linhas
-  if(fileItem != 0x20 && fileItem != 0x09 && fileItem != '\n')
+  if(fileItem != 0x20 && fileItem != 0x09 && fileItem != '\n' && fileItem != ':')
   {
-    fileString[i] =  fileItem;
-    i++;
+      fileString[i] =  fileItem;
+      i++;
   }
   else
   {
@@ -127,11 +125,16 @@ while ((fileItem = fgetc(asmFile)) != EOF)
           tableEqu->nextItem = tableCreator;
           tableEqu = tableCreator;
         }
+
+        // Remoção de
+        RemoveChar(0x20, saveFile);
+        RemoveChar(0x09, saveFile);
         strcpy(tableEqu->Label, saveFile);
         wasEqu = 1;
       }
 
       locationCount++;
+      IsInEqu(tableHead, fileString);
       strcat(saveFile, fileString);
       strcat(saveFile, " ");
     }
@@ -197,4 +200,41 @@ while(asmContent->previousLine != NULL)
   asmContent = asmContent->previousLine;
 
 return asmContent;
+}
+
+void IsInEqu(equTable *EquHead, char *item)
+{
+  equTable *tableAux;
+  tableAux = EquHead;
+
+  while(tableAux != NULL)
+  {
+    if(strcmp(tableAux->Label, item) == 0)
+    {
+      sprintf(item, "%d", tableAux->Value);
+      break;
+    }
+
+    tableAux = tableAux->nextItem;
+  }
+}
+
+void RemoveChar(char removeChar, char *item)
+{
+  int i;
+  if(item[0] == removeChar)
+  {
+    for(i = 0; i<98; i++)
+    {
+      item[i] = item[i + 1];
+    }
+  }
+  else
+  {
+    for(i = 99; i>0; i--)
+    {
+      if(item[i] == removeChar)
+        item[i] = '\0';
+    }
+  }
 }

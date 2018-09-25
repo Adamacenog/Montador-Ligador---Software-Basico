@@ -20,3 +20,5 @@ typedef struct EquTable
 }equTable;
 
 preProcess* DoPreProcess(char **);
+void IsInEqu(equTable*, char *);
+void RemoveChar(char, char *);
