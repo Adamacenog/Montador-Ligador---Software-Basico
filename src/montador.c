@@ -46,7 +46,7 @@ preProcess* DoPreProcess(char **name)
   FILE *asmFile;
   preProcess *asmContent = NULL, *contentCreator = NULL;
   equTable *tableEqu = NULL, *tableCreator = NULL, *tableAux = NULL, *tableHead = NULL;
-  int lineCount = 1, locationCount = 0, i=0, removeLine = 0, wasEqu = 0;
+  int lineCount = 1, locationCount = 0, i=0, removeLine = 0, wasEqu = 0, wasIf = 0;
   char asmFileName[100], fileItem, fileString[100], saveFile[400];
 
   // Adicionando o '.asm' no nome do arquivo
@@ -102,6 +102,16 @@ while ((fileItem = fgetc(asmFile)) != EOF)
       wasEqu = 0;
     }
 
+    // Caso tenha tido algum IF no codigo
+    if(wasIf == 1)
+    {
+      char *ptr;
+      IsInEqu(tableHead, fileString);
+      if(strtol(fileString,&ptr,10) != 1)
+        removeLine = 2; // remove a linha do 'if' e a linha abaixo dele
+      wasIf = 0;
+    }
+
     if(strcmp(fileString, "") != 0)
     {
       if(strcmp(fileString, "EQU") == 0)
@@ -126,11 +136,17 @@ while ((fileItem = fgetc(asmFile)) != EOF)
           tableEqu = tableCreator;
         }
 
-        // Remoção de
+        // Remoção de tabs e espaços
         RemoveChar(0x20, saveFile);
         RemoveChar(0x09, saveFile);
         strcpy(tableEqu->Label, saveFile);
         wasEqu = 1;
+      }
+
+      if(strcmp(fileString, "IF") == 0)
+      {
+        wasIf = 1;
+        removeLine = 1;
       }
 
       locationCount++;
