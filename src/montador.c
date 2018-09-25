@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 preProcess* DoPreProcess(char **name)
 {
   FILE *asmFile;
-  preProcess *asmContent = NULL, *contentCreator = NULL;
+  preProcess *asmContent = NULL;
   equTable *tableEqu = NULL, *tableCreator = NULL, *tableAux = NULL, *tableHead = NULL;
   int lineCount = 1, locationCount = 0, i=0, removeLine = 0, wasEqu = 0, wasIf = 0;
   char asmFileName[100], fileItem, fileString[100], saveFile[400];
@@ -161,25 +161,7 @@ while ((fileItem = fgetc(asmFile)) != EOF)
       // Se tiver algo na string do arquivo e a quantidade de linhas ignoradas for zero
       if(saveFile[0] != '\0' && removeLine == 0)
       {
-        // Criação da lista de itens pre-processados
-        contentCreator = (preProcess *) malloc(sizeof(preProcess));
-        if(asmContent == NULL)
-        {
-          asmContent = contentCreator;
-          asmContent->nextLine = NULL;
-          asmContent->previousLine = NULL;
-        }
-        else
-        {
-          contentCreator->previousLine = asmContent;
-          asmContent->nextLine = contentCreator;
-          asmContent = contentCreator;
-          asmContent->nextLine = NULL;
-        }
-
-        strcpy(asmContent->Program, saveFile);
-        asmContent->LineCounter = lineCount;
-        asmContent->LocationCounter = locationCount;
+        AddPreProcess(&asmContent, saveFile, lineCount, locationCount);
       }
 
       // Caso alguma linha tenha sido ignorada
@@ -212,8 +194,7 @@ printf("\n");
 
 fclose(asmFile);
 
-while(asmContent->previousLine != NULL)
-  asmContent = asmContent->previousLine;
+PrintPreProcess(asmContent, name);
 
 return asmContent;
 }
@@ -252,5 +233,78 @@ void RemoveChar(char removeChar, char *item)
       if(item[i] == removeChar)
         item[i] = '\0';
     }
+  }
+}
+
+// Adiciona ao fim da lista PreProcess (ou cria a lista caso seja NULL)
+void AddPreProcess(preProcess **preProcessHead, char *saveFile, int lineCount, int locationCount)
+{
+  preProcess *contentCreator, *lastElem;
+
+  // Criação da lista de itens pre-processados
+  contentCreator = (preProcess *) malloc(sizeof(preProcess));
+  if(*preProcessHead == NULL)
+  {
+    *preProcessHead = contentCreator;
+    (*preProcessHead)->nextLine = NULL;
+    (*preProcessHead)->previousLine = NULL;
+  }
+  else
+  {
+    lastElem = *preProcessHead;
+
+    while(lastElem->nextLine != NULL)
+      lastElem = lastElem->nextLine;
+
+    contentCreator->previousLine = lastElem;
+    lastElem->nextLine = contentCreator;
+    contentCreator->nextLine = NULL;
+  }
+
+  strcpy(contentCreator->Program, saveFile);
+  contentCreator->LineCounter = lineCount;
+  contentCreator->LocationCounter = locationCount;
+}
+
+// Deleta toda a lista PreProcess
+/*void DeletaPreProcess(preProcess**)
+{
+
+}
+
+// Adiciona ao fim da lista EquTable (ou cria a lista caso seja NULL)
+void AddEquTable(equTable**, char *, int)
+{
+
+}
+
+// Deleta toda a lista EquTable
+void DeletaEquTable(equTable**)
+{
+
+}*/
+
+// Imprime todo conteudo da lista preProcess em um arquivo nome.pre
+void PrintPreProcess(preProcess *preProcessHead, char **name)
+{
+  char asmFileName[100];
+  FILE * asmFile;
+
+  // Adicionando o '.asm' no nome do arquivo
+  strcpy(asmFileName,name[1]);
+  strcat(asmFileName,".pre");
+
+  // Abertura do arquivo '.asm'
+  asmFile = fopen(asmFileName,"w");
+  if(asmFile == NULL)
+  {
+    printf("ERRO: Arquivo não criado\n");
+    exit(1);
+  }
+
+  while(preProcessHead != NULL)
+  {
+    fprintf(asmFile, "%s\n", preProcessHead->Program);
+    preProcessHead = preProcessHead->nextLine;
   }
 }

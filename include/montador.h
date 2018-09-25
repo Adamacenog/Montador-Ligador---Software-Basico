@@ -22,3 +22,8 @@ typedef struct EquTable
 preProcess* DoPreProcess(char **);
 void IsInEqu(equTable*, char *);
 void RemoveChar(char, char *);
+void AddPreProcess(preProcess**, char *, int, int); // Adiciona ao fim da lista PreProcess (ou cria a lista caso seja NULL)
+//void DeletaPreProcess(preProcess**); // Deleta toda a lista PreProcess
+//void AddEquTable(equTable**, char *, int); // Adiciona ao fim da lista EquTable (ou cria a lista caso seja NULL)
+//void DeletaEquTable(equTable**); // Deleta toda a lista EquTable
+void PrintPreProcess(preProcess*, char**); // Imprime todo conteudo da lista preProcess em um arquivo nome.pre
