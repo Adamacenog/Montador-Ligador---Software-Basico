@@ -7,10 +7,10 @@ LDIR =../lib
 
 LIBS=-lm
 
-_DEPS = montador.h ligador.h
+_DEPS = montador.h ligador.h preProcess.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ = montador.o
+_OBJ = montador.o preProcess.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 _OBJ2 = ligador.o
