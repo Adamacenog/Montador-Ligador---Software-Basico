@@ -12,11 +12,6 @@ Jônatas Senna - mat.
     #include <ctype.h>
 #endif
 
-#ifndef _Montador_library
-  #define _Montador_library
-    #include "montador.h"
-#endif
-
 #ifndef _PreProcess_library
   #define _PreProcess_library
     #include "preProcess.h"
@@ -27,7 +22,7 @@ preProcess* DoPreProcess(char **name)
   FILE *asmFile;
   preProcess *asmContent = NULL;
   equTable *tableHead = NULL;
-  int lineCount = 1, i = 0, removeLine = 0, wasEqu = 0, wasIf = 0;
+  int lineCount = 1, i = 0, removeLine = 0, wasEqu = 0, wasIf = 0, noMoreItem = 0;
   char fileItem, fileString[100], saveFile[400];
 
   // Abertura do arquivo '.asm'
@@ -38,7 +33,7 @@ preProcess* DoPreProcess(char **name)
   ClearString(saveFile, 400);
 
   // Leitura de caracter em caracter do arquivo, botando os caracteres em maiúsculo
-  while ((fileItem = toupper(fgetc(asmFile))) != EOF)
+  while ((fileItem = toupper((char) fgetc(asmFile))) != EOF)
   {
     // Remoção dos comentários
     if(fileItem == ';')
@@ -51,30 +46,44 @@ preProcess* DoPreProcess(char **name)
     {
         fileString[i] =  fileItem;
         i++;
+
+        // Quando setado em 1, não aceita nenhum caracter a mais (casos após valores do IF e EQU)
+        if(noMoreItem == 1)
+        {
+          printf("Erro sintático na linha: %d.\n", lineCount);
+          noMoreItem = 0;
+        }
     }
     else
     {
       // Caso tenha tido algum EQU no codigo
-      if(wasEqu == 1)
+      if(wasEqu)
       {
         char *ptr;
+
+        if(strcmp(fileString, "") == 0)
+          printf("Erro sintático na linha: %d.\n", lineCount);
+
         int value = strtol(fileString,&ptr,10);
-        if(strcmp(ptr, "") == 0)
-        {
-          AddValueEquTable(tableHead, value);
-        }
-        else
-        {
-          printf("Erro  na linha: %d.\n", lineCount);
-        }
+
+        AddValueEquTable(tableHead, value);
+        noMoreItem = 1;
+
+        // Caso tenha algo junto ao numero (Ex: 1bla)
+        if(strcmp(ptr, "") != 0)
+          printf("Erro léxico na linha: %d.\n", lineCount);
 
         wasEqu = 0;
       }
 
       // Caso tenha tido algum IF no codigo
-      if(wasIf == 1)
+      if(wasIf)
       {
         char *ptr;
+
+        if(strcmp(fileString, "") == 0)
+          printf("Erro sintático na linha: %d.\n", lineCount);
+
         IsInEqu(tableHead, fileString);
 
         if(strtol(fileString,&ptr,10) != 1 && strcmp(ptr, "") == 0)
@@ -82,15 +91,17 @@ preProcess* DoPreProcess(char **name)
 
         if(strcmp(ptr, "") != 0)
         {
-          printf("Erro  na linha: %d.\n", lineCount);
+          printf("Erro léxico na linha: %d.\n", lineCount);
           removeLine = 0;
         }
 
+        noMoreItem = 1;
         wasIf = 0;
       }
 
       if(strcmp(fileString, "") != 0)
       {
+        // Caso seja encontrado um EQU
         if(strcmp(fileString, "EQU") == 0)
         {
           // Remoção de tabs, espaços
@@ -99,30 +110,32 @@ preProcess* DoPreProcess(char **name)
 
           if(StringContains(saveFile, 0x20, 400) == 0 && StringContains(saveFile, 0x09, 400) == 0)
           {
-            AddLabelEquTable(&tableHead, saveFile);
+            AddLabelEquTable(&tableHead, saveFile, lineCount);
             removeLine = 1;
             wasEqu = 1;
           }
           else
           {
-            printf("Erro na linha: %d.\n", lineCount);
+            printf("Erro sintático na linha: %d.\n", lineCount);
           }
         }
 
+        // Caso seja encontrado um 'IF'
         if(strcmp(fileString, "IF") == 0)
         {
-          // Remoção de tabs, espaços
+          // Remoção de tabs, espaços antes do IF
           RemoveChar(0x20, saveFile, 400, 0);
           RemoveChar(0x09, saveFile, 400, 0);
 
-          if(StringContains(saveFile, 0x20, 400) == 0 && StringContains(saveFile, 0x09, 400) == 0)
+          // Não pode conter labels ou qualquer coisa antes do IF
+          if(strcmp(saveFile, "") == 0)
           {
             wasIf = 1;
             removeLine = 1;
           }
           else
           {
-            printf("Erro na linha: %d.\n", lineCount);
+            printf("Erro sintático na linha: %d.\n", lineCount);
           }
         }
 
@@ -131,30 +144,36 @@ preProcess* DoPreProcess(char **name)
         strcat(saveFile, " ");
       }
 
-      // Contador de linhas do programa e criação de um novo item da lista
-      if(fileItem == '\n')
-      {
-        // Se tiver algo na string do arquivo e a quantidade de linhas ignoradas for zero
-        if(saveFile[0] != '\0' && removeLine == 0)
-        {
-          AddPreProcess(&asmContent, saveFile, lineCount);
-        }
-
-        // Caso alguma linha tenha sido ignorada
-        if(removeLine != 0)
-          removeLine--; // Remove o contador de linha ignorada
-
-        // Prox - linha
-        lineCount++;
-
-        // Limpar por completo a string saveFile
-        ClearString(saveFile, 400);
-      }
-
       // Apaga toda string do fileString
       ClearString(fileString, 100);
 
       i = 0;
+    }
+
+    // Contador de linhas do programa e criação de um novo item da lista
+    if(fileItem == '\n')
+    {
+      // Se tiver algo na string do arquivo e a quantidade de linhas ignoradas for zero
+      if(removeLine == 0)
+      {
+        // Remoção de espaço e tabs no final da instrução
+        RemoveChar(0x20, saveFile, 400, 1);
+        RemoveChar(0x09, saveFile, 400, 1);
+        AddPreProcess(&asmContent, saveFile, lineCount);
+      }
+
+      // Caso alguma linha tenha sido ignorada
+      if(removeLine != 0)
+        removeLine--; // Remove o contador de linha ignorada
+
+      // Prox - linha
+      lineCount++;
+
+      // Limpa o noMoreItem
+      noMoreItem = 0;
+
+      // Limpar por completo a string saveFile
+      ClearString(saveFile, 400);
     }
   }
 
@@ -271,8 +290,8 @@ void DeletePreProcess(preProcess **preProcessHead)
   }
 }
 
-// Adiciona ao fim da lista EquTable (ou cria a lista caso seja NULL)
-void AddLabelEquTable(equTable **tableHead, char *saveFile)
+// Adiciona ao fim da lista EquTable (ou cria a lista caso seja NULL), inteiro serve para identificar o numero da linha com erro.
+void AddLabelEquTable(equTable **tableHead, char *saveFile, int lineCount)
 {
   equTable *tableCreator = NULL, *tableAux = NULL;
 
@@ -295,6 +314,10 @@ void AddLabelEquTable(equTable **tableHead, char *saveFile)
     tableCreator->previousItem = tableAux;
     tableAux->nextItem = tableCreator;
   }
+
+  // Identificação da existência de ':' APENAS no final do label
+  if(StringContains(saveFile, ':', 400) != 1 || StringContainsAtEnd(saveFile, ':', 400) == 0)
+    printf("Erro léxico na linha: %d.\n", lineCount);
 
   // Remoção de ':'
   RemoveChar(':', saveFile, 400, 1);
@@ -357,4 +380,17 @@ int StringContains(char *string, char item, int size)
       quantity += 1;
 
   return quantity;
+}
+
+// Verifica se a string contem um caracter na sua ultima posição preenchida (retorna 1 se tiver, 0 se não)
+int StringContainsAtEnd(char *string, char item, int size)
+{
+  if(string[size-1] == item)
+    return 1;
+
+  for(int i = (size-2); i > 0; i--)
+    if(string[i] == item && string[i + 1] == '\0')
+      return 1;
+
+  return 0;
 }

@@ -25,8 +25,9 @@ void IsInEqu(equTable*, char *); // Verifica se esta na tabela Equ, se estiver, 
 void RemoveChar(char, char *, int, int); // Remove apenas o primeiro e o ultimo elemento encontrado em 'removeChar', ou apenas o ultimo elemento se especificado pelo ultimo int com 1 (0 para inicio ou fim)
 void AddPreProcess(preProcess**, char *, int); // Adiciona ao fim da lista PreProcess (ou cria a lista caso seja NULL)
 void DeletePreProcess(preProcess**); // Deleta toda a lista PreProcess
-void AddLabelEquTable(equTable**, char *); // Adiciona ao fim da lista EquTable (ou cria a lista caso seja NULL)
+void AddLabelEquTable(equTable**, char *, int); // Adiciona ao fim da lista EquTable (ou cria a lista caso seja NULL), inteiro serve para identificar o numero da linha com erro.
 void AddValueEquTable(equTable *, int); // Seta o valor do fim da lista EquTable
 void DeleteEquTable(equTable**); // Deleta toda a lista EquTable
 void PrintPreProcess(preProcess*, char**); // Imprime todo conteudo da lista preProcess em um arquivo nome.pre
 int StringContains(char *, char, int); // Verifica a quantidade de vezes que um item aparece na string
+int StringContainsAtEnd(char *, char, int); // Verifica se a string contem um caracter na sua ultima posição preenchida (retorna 1 se tiver, 0 se não)

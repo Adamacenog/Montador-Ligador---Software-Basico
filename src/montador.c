@@ -12,11 +12,6 @@ Jônatas Senna - mat.
     #include <ctype.h>
 #endif
 
-#ifndef _Montador_library
-  #define _Montador_library
-    #include "montador.h"
-#endif
-
 #ifndef _PreProcess_library
   #define _PreProcess_library
     #include "preProcess.h"
