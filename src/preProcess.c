@@ -150,7 +150,8 @@ preProcess* DoPreProcess(char **name)
           }
         }
 
-        // Verificação final de erros léxicos (pode conter ':', ',' apenas no final e não pode ter numeros no inicio e '-', '+' devem estar separados unicamente por espaços (ficar sozinhos na string))
+        // Verificação final de erros léxicos (pode conter ':', ',' apenas no final e não pode ter numeros no inicio,
+        // '+' devem estar separados unicamente por espaços (ficar sozinhos na string)) e o '-' deve vir acompanhado de um numero
         twoPointsQuantity = StringContains(fileString, ':', 51);
         commaQuantity = StringContains(fileString, ',', 51);
         plusQuantity = StringContains(fileString, '+', 51);
@@ -159,7 +160,7 @@ preProcess* DoPreProcess(char **name)
         twoPointsQuantity > 1 || twoPointsQuantity == 1 && StringContainsAtEnd(fileString, ':', 51) == 0 ||
         commaQuantity > 1 || commaQuantity == 1 && StringContainsAtEnd(fileString, ',', 51) == 0 ||
         plusQuantity > 1 || plusQuantity == 1 && (fileString[0] != '+' || fileString[1] != '\0') ||
-        minusQuantity > 1 || minusQuantity == 1 && (fileString[0] != '-' || fileString[1] != '\0'))
+        minusQuantity > 1 || minusQuantity == 1 && (fileString[0] != '-' || (fileString[1] < 0x30 || fileString[1] > 0x39)))
         {
           printf("Erro léxico na linha: %d.\n", lineCount);
         }
