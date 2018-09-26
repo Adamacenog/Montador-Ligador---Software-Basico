@@ -151,7 +151,7 @@ preProcess* DoPreProcess(char **name)
     }
 
     // Contador de linhas do programa e criação de um novo item da lista
-    if(fileItem == '\n')
+    if(fileItem == '\n' && strcmp(saveFile, "") != 0)
     {
       // Se tiver algo na string do arquivo e a quantidade de linhas ignoradas for zero
       if(removeLine == 0)
