@@ -50,7 +50,7 @@ preProcess* DoPreProcess(char **name)
     if(fileItem != 0x20 && fileItem != 0x09 && fileItem != '\n')
     {
         // Checa os caracteres para caracter ilegal
-        if(fileItem == 0x5F || fileItem == 0x3A || fileItem >= 0x30 && fileItem <= 0x39 || fileItem >= 0x41 && fileItem <= 0x5A)
+        if(fileItem == 0x2D || fileItem == 0x5F || fileItem == 0x3A || fileItem == 0x2C || fileItem == 0x2B || fileItem >= 0x30 && fileItem <= 0x39 || fileItem >= 0x41 && fileItem <= 0x5A)
         {
           fileString[i] =  fileItem;
           i++;
@@ -167,20 +167,23 @@ preProcess* DoPreProcess(char **name)
     }
 
     // Contador de linhas do programa e criação de um novo item da lista
-    if(fileItem == '\n' && strcmp(saveFile, "") != 0)
+    if(fileItem == '\n')
     {
-      // Se tiver algo na string do arquivo e a quantidade de linhas ignoradas for zero
-      if(removeLine == 0)
+      if(strcmp(saveFile, "") != 0)
       {
-        // Remoção de espaço e tabs no final da instrução
-        RemoveChar(0x20, saveFile, 204, 1);
-        RemoveChar(0x09, saveFile, 204, 1);
-        AddPreProcess(&asmContent, saveFile, lineCount);
-      }
+        // Se tiver algo na string do arquivo e a quantidade de linhas ignoradas for zero
+        if(removeLine == 0)
+        {          
+          // Remoção de espaço e tabs no final da instrução
+          RemoveChar(0x20, saveFile, 204, 1);
+          RemoveChar(0x09, saveFile, 204, 1);
+          AddPreProcess(&asmContent, saveFile, lineCount);
+        }
 
-      // Caso alguma linha tenha sido ignorada
-      if(removeLine != 0)
-        removeLine--; // Remove o contador de linha ignorada
+        // Caso alguma linha tenha sido ignorada
+        if(removeLine != 0)
+          removeLine--; // Remove o contador de linha ignorada
+      }
 
       // Prox - linha
       lineCount++;
