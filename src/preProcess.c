@@ -27,7 +27,7 @@ preProcess* DoPreProcess(char **name)
   FILE *asmFile;
   preProcess *asmContent = NULL;
   equTable *tableHead = NULL;
-  int lineCount = 1, i = 0, removeLine = 0, wasEqu = 0, wasIf = 0, noMoreItem = 0, valueInt, ilegalQuantity;
+  int lineCount = 1, i = 0, removeLine = 0, wasEqu = 0, wasIf = 0, noMoreItem = 0, valueInt, twoPointsQuantity,commaQuantity, plusQuantity, minusQuantity;
   char fileItem, fileString[51], saveFile[204], *ptr;
 
   // Abertura do arquivo '.asm'
@@ -150,10 +150,20 @@ preProcess* DoPreProcess(char **name)
           }
         }
 
-        // Verificação final de erros léxicos (pode conter ':' apenas no final e não pode ter numeros no inicio)
-        ilegalQuantity = StringContains(fileString, ':', 51);
-        if(fileString[0] >= 0x30 && fileString[0] <= 0x39 && fileString[1] != '\0' ||  ilegalQuantity > 1 || ilegalQuantity == 1 &&  StringContainsAtEnd(fileString, ':', 51) == 0)
+        // Verificação final de erros léxicos (pode conter ':', ',' apenas no final e não pode ter numeros no inicio e '-', '+' devem estar separados unicamente por espaços (ficar sozinhos na string))
+        twoPointsQuantity = StringContains(fileString, ':', 51);
+        commaQuantity = StringContains(fileString, ',', 51);
+        plusQuantity = StringContains(fileString, '+', 51);
+        minusQuantity = StringContains(fileString, '-', 51);
+        if(fileString[0] >= 0x30 && fileString[0] <= 0x39 && fileString[1] != '\0' ||
+        twoPointsQuantity > 1 || twoPointsQuantity == 1 && StringContainsAtEnd(fileString, ':', 51) == 0 ||
+        commaQuantity > 1 || commaQuantity == 1 && StringContainsAtEnd(fileString, ',', 51) == 0 ||
+        plusQuantity > 1 || plusQuantity == 1 && (fileString[0] != '+' || fileString[1] != '\0') ||
+        minusQuantity > 1 || minusQuantity == 1 && (fileString[0] != '-' || fileString[1] != '\0'))
+        {
           printf("Erro léxico na linha: %d.\n", lineCount);
+        }
+
 
         IsInEqu(tableHead, fileString);
         strcat(saveFile, fileString);
@@ -173,7 +183,15 @@ preProcess* DoPreProcess(char **name)
       {
         // Se tiver algo na string do arquivo e a quantidade de linhas ignoradas for zero
         if(removeLine == 0)
-        {          
+        {
+          // Identificação de erros na 'frase': Só pode ter um ':', '+', '-', ',' na frase
+          twoPointsQuantity = StringContains(saveFile, ':', 204);
+          commaQuantity = StringContains(saveFile, ',', 204);
+          plusQuantity = StringContains(saveFile, '+', 204);
+          minusQuantity = StringContains(saveFile, '-', 204);
+          if(twoPointsQuantity > 1 || commaQuantity > 1 || plusQuantity > 1 || minusQuantity > 1 || plusQuantity == 1 && minusQuantity == 1)
+            printf("Erro sintático na linha: %d.\n", lineCount);
+
           // Remoção de espaço e tabs no final da instrução
           RemoveChar(0x20, saveFile, 204, 1);
           RemoveChar(0x09, saveFile, 204, 1);
