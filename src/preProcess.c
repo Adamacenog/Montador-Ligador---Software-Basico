@@ -17,20 +17,25 @@ Jônatas Senna - mat.
     #include "preProcess.h"
 #endif
 
+#ifndef _StringFunctions_library
+  #define _StringFunctions_library
+    #include "stringFunctions.h"
+#endif
+
 preProcess* DoPreProcess(char **name)
 {
   FILE *asmFile;
   preProcess *asmContent = NULL;
   equTable *tableHead = NULL;
-  int lineCount = 1, i = 0, removeLine = 0, wasEqu = 0, wasIf = 0, noMoreItem = 0;
-  char fileItem, fileString[100], saveFile[400];
+  int lineCount = 1, i = 0, removeLine = 0, wasEqu = 0, wasIf = 0, noMoreItem = 0, valueInt, ilegalQuantity;
+  char fileItem, fileString[51], saveFile[204], *ptr;
 
   // Abertura do arquivo '.asm'
   asmFile = OpenAsmFile(name);
 
   // Limpar por completo a string fileString e saveFile
-  ClearString(fileString, 100);
-  ClearString(saveFile, 400);
+  ClearString(fileString, 51);
+  ClearString(saveFile, 204);
 
   // Leitura de caracter em caracter do arquivo, botando os caracteres em maiúsculo
   while ((fileItem = toupper((char) fgetc(asmFile))) != EOF)
@@ -44,8 +49,16 @@ preProcess* DoPreProcess(char **name)
     // Remoção de tabs, espaços e novas linhas
     if(fileItem != 0x20 && fileItem != 0x09 && fileItem != '\n')
     {
-        fileString[i] =  fileItem;
-        i++;
+        // Checa os caracteres para caracter ilegal
+        if(fileItem == 0x5F || fileItem == 0x3A || fileItem >= 0x30 && fileItem <= 0x39 || fileItem >= 0x41 && fileItem <= 0x5A)
+        {
+          fileString[i] =  fileItem;
+          i++;
+        }
+        else
+        {
+          printf("Erro léxico na linha: %d.\n", lineCount);
+        }
 
         // Quando setado em 1, não aceita nenhum caracter a mais (casos após valores do IF e EQU)
         if(noMoreItem == 1)
@@ -59,19 +72,16 @@ preProcess* DoPreProcess(char **name)
       // Caso tenha tido algum EQU no codigo
       if(wasEqu)
       {
-        char *ptr;
-
         if(strcmp(fileString, "") == 0)
           printf("Erro sintático na linha: %d.\n", lineCount);
 
-        int value = strtol(fileString,&ptr,10);
-
-        AddValueEquTable(tableHead, value);
+        valueInt = strtol(fileString,&ptr,10);
+        AddValueEquTable(tableHead, valueInt);
         noMoreItem = 1;
 
-        // Caso tenha algo junto ao numero (Ex: 1bla)
-        if(strcmp(ptr, "") != 0)
-          printf("Erro léxico na linha: %d.\n", lineCount);
+        // Caso tenha apenas letras sem numero
+        if(strcmp(ptr, "") != 0 && (fileString[0] < 0x30 || fileString[0] > 0x39))
+          printf("Erro sintático na linha: %d.\n", lineCount);
 
         wasEqu = 0;
       }
@@ -79,19 +89,20 @@ preProcess* DoPreProcess(char **name)
       // Caso tenha tido algum IF no codigo
       if(wasIf)
       {
-        char *ptr;
-
         if(strcmp(fileString, "") == 0)
           printf("Erro sintático na linha: %d.\n", lineCount);
 
         IsInEqu(tableHead, fileString);
 
-        if(strtol(fileString,&ptr,10) != 1 && strcmp(ptr, "") == 0)
+        valueInt = strtol(fileString,&ptr,10);
+
+        if(valueInt != 1 && strcmp(ptr, "") == 0)
           removeLine = 2; // remove a linha do 'if' e a linha abaixo dele
 
-        if(strcmp(ptr, "") != 0)
+        // Caso tenha apenas letras sem numero
+        if(strcmp(ptr, "") != 0 && (fileString[0] < 0x30 || fileString[0] > 0x39))
         {
-          printf("Erro léxico na linha: %d.\n", lineCount);
+          printf("Erro sintático na linha: %d.\n", lineCount);
           removeLine = 0;
         }
 
@@ -105,10 +116,10 @@ preProcess* DoPreProcess(char **name)
         if(strcmp(fileString, "EQU") == 0)
         {
           // Remoção de tabs, espaços
-          RemoveChar(0x20, saveFile, 400, 0);
-          RemoveChar(0x09, saveFile, 400, 0);
+          RemoveChar(0x20, saveFile, 204, 0);
+          RemoveChar(0x09, saveFile, 204, 0);
 
-          if(StringContains(saveFile, 0x20, 400) == 0 && StringContains(saveFile, 0x09, 400) == 0)
+          if(StringContains(saveFile, 0x20, 204) == 0 && StringContains(saveFile, 0x09, 204) == 0)
           {
             AddLabelEquTable(&tableHead, saveFile, lineCount);
             removeLine = 1;
@@ -124,8 +135,8 @@ preProcess* DoPreProcess(char **name)
         if(strcmp(fileString, "IF") == 0)
         {
           // Remoção de tabs, espaços antes do IF
-          RemoveChar(0x20, saveFile, 400, 0);
-          RemoveChar(0x09, saveFile, 400, 0);
+          RemoveChar(0x20, saveFile, 204, 0);
+          RemoveChar(0x09, saveFile, 204, 0);
 
           // Não pode conter labels ou qualquer coisa antes do IF
           if(strcmp(saveFile, "") == 0)
@@ -139,13 +150,18 @@ preProcess* DoPreProcess(char **name)
           }
         }
 
+        // Verificação final de erros léxicos (pode conter ':' apenas no final e não pode ter numeros no inicio)
+        ilegalQuantity = StringContains(fileString, ':', 51);
+        if(fileString[0] >= 0x30 && fileString[0] <= 0x39 && fileString[1] != '\0' ||  ilegalQuantity > 1 || ilegalQuantity == 1 &&  StringContainsAtEnd(fileString, ':', 51) == 0)
+          printf("Erro léxico na linha: %d.\n", lineCount);
+
         IsInEqu(tableHead, fileString);
         strcat(saveFile, fileString);
         strcat(saveFile, " ");
       }
 
       // Apaga toda string do fileString
-      ClearString(fileString, 100);
+      ClearString(fileString, 51);
 
       i = 0;
     }
@@ -157,8 +173,8 @@ preProcess* DoPreProcess(char **name)
       if(removeLine == 0)
       {
         // Remoção de espaço e tabs no final da instrução
-        RemoveChar(0x20, saveFile, 400, 1);
-        RemoveChar(0x09, saveFile, 400, 1);
+        RemoveChar(0x20, saveFile, 204, 1);
+        RemoveChar(0x09, saveFile, 204, 1);
         AddPreProcess(&asmContent, saveFile, lineCount);
       }
 
@@ -173,7 +189,7 @@ preProcess* DoPreProcess(char **name)
       noMoreItem = 0;
 
       // Limpar por completo a string saveFile
-      ClearString(saveFile, 400);
+      ClearString(saveFile, 204);
     }
   }
 
@@ -203,12 +219,6 @@ FILE * OpenAsmFile(char **name)
   return asmFile;
 }
 
-void ClearString(char *string, int size)
-{
-  for(int i = 0; i<size; i++)
-    string[i] = '\0';
-}
-
 void IsInEqu(equTable *EquHead, char *item)
 {
   while(EquHead != NULL)
@@ -221,31 +231,6 @@ void IsInEqu(equTable *EquHead, char *item)
 
     EquHead = EquHead->nextItem;
   }
-}
-
-// Remove apenas o char 'removeChar' que estiver no inicio e no fim da string, ou apenas checa no final caso lastOnly seja maior ou menor que 0
-void RemoveChar(char removeChar, char *item, int size, int lastOnly)
-{
-  int i;
-  if(item[0] == removeChar && lastOnly == 0)
-  {
-    for(i = 0; i<(size - 2); i++)
-    {
-      item[i] = item[i + 1];
-    }
-  }
-
-  for(i = (size -2); i > 0; i--)
-  {
-    if(item[i] == removeChar && item[i+1] == '\0')
-    {
-      item[i] = '\0';
-      break;
-    }
-  }
-
-  if(item[(size -1)] == removeChar)
-    item[(size -1)] = '\0';
 }
 
 // Adiciona ao fim da lista PreProcess (ou cria a lista caso seja NULL)
@@ -316,11 +301,11 @@ void AddLabelEquTable(equTable **tableHead, char *saveFile, int lineCount)
   }
 
   // Identificação da existência de ':' APENAS no final do label
-  if(StringContains(saveFile, ':', 400) != 1 || StringContainsAtEnd(saveFile, ':', 400) == 0)
+  if(StringContains(saveFile, ':', 204) != 1 || StringContainsAtEnd(saveFile, ':', 204) == 0)
     printf("Erro léxico na linha: %d.\n", lineCount);
 
   // Remoção de ':'
-  RemoveChar(':', saveFile, 400, 1);
+  RemoveChar(':', saveFile, 204, 1);
   strcpy(tableCreator->Label, saveFile);
 }
 
@@ -369,28 +354,4 @@ void PrintPreProcess(preProcess *preProcessHead, char **name)
     fprintf(asmFile, "%s\n", preProcessHead->Program);
     preProcessHead = preProcessHead->nextLine;
   }
-}
-
-// Verifica a quantidade de vezes que um item aparece na string
-int StringContains(char *string, char item, int size)
-{
-  int quantity = 0;
-  for(int i = 0; i < (size-1); i++)
-    if(string[i] == item)
-      quantity += 1;
-
-  return quantity;
-}
-
-// Verifica se a string contem um caracter na sua ultima posição preenchida (retorna 1 se tiver, 0 se não)
-int StringContainsAtEnd(char *string, char item, int size)
-{
-  if(string[size-1] == item)
-    return 1;
-
-  for(int i = (size-2); i > 0; i--)
-    if(string[i] == item && string[i + 1] == '\0')
-      return 1;
-
-  return 0;
 }

@@ -7,10 +7,10 @@ LDIR =../lib
 
 LIBS=-lm
 
-_DEPS = ligador.h preProcess.h
+_DEPS = ligador.h preProcess.h stringFunctions.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ = montador.o preProcess.o
+_OBJ = montador.o preProcess.o stringFunctions.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 _OBJ2 = ligador.o
