@@ -158,9 +158,7 @@ preProcess* DoPreProcess(char **name)
         minusQuantity = StringContains(fileString, '-', 51);
         if(fileString[0] >= 0x30 && fileString[0] <= 0x39 && fileString[1] != '\0' ||
         twoPointsQuantity > 1 || twoPointsQuantity == 1 && StringContainsAtEnd(fileString, ':', 51) == 0 ||
-        commaQuantity > 1 || commaQuantity == 1 && StringContainsAtEnd(fileString, ',', 51) == 0 ||
-        plusQuantity > 1 || plusQuantity == 1 && (fileString[0] != '+' || fileString[1] != '\0') ||
-        minusQuantity > 1 || minusQuantity == 1 && (fileString[0] != '-' || (fileString[1] < 0x30 || fileString[1] > 0x39)))
+        commaQuantity > 1 || plusQuantity > 1 || minusQuantity > 1)
         {
           printf("Erro léxico na linha: %d.\n", lineCount);
         }
@@ -376,6 +374,6 @@ void PrintPreProcess(preProcess *preProcessHead, char **name)
     fprintf(asmFile, "%s\n", preProcessHead->Program);
     preProcessHead = preProcessHead->nextLine;
   }
-  
+
   fclose(asmFile);
 }
