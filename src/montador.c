@@ -17,11 +17,19 @@ Jônatas Senna - mat.
     #include "preProcess.h"
 #endif
 
+#ifndef _FirstPass_library
+  #define _FirstPass_library
+    #include "firstPass.h"
+#endif
+
 int main(int argc, char *argv[])
 {
   if(argc == 2)
   {
-    preProcess *asmFile, *aux;
+    preProcess *asmFile = NULL, *aux;
+    objCode *objCodeHead = NULL;
+    symbolTable * symbolTableHead = NULL;
+    definitionTable * definitionTableHead = NULL;
     asmFile = DoPreProcess(argv);
 
     aux = asmFile;
@@ -31,7 +39,7 @@ int main(int argc, char *argv[])
       printf("%s : LineCounter: %d\n", aux->Program, aux->LineCounter);
       aux = aux->nextLine;
     }
-
+    objCodeHead = DoFirstPass(asmFile, &symbolTableHead, &definitionTableHead);
     DeletePreProcess(&asmFile);
   }
   else
