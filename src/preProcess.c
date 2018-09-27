@@ -376,4 +376,6 @@ void PrintPreProcess(preProcess *preProcessHead, char **name)
     fprintf(asmFile, "%s\n", preProcessHead->Program);
     preProcessHead = preProcessHead->nextLine;
   }
+  
+  fclose(asmFile);
 }

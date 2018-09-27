@@ -26,21 +26,22 @@ int main(int argc, char *argv[])
 {
   if(argc == 2)
   {
-    preProcess *asmFile = NULL, *aux;
+    preProcess *asmFile = NULL;
     objCode *objCodeHead = NULL;
     symbolTable * symbolTableHead = NULL;
     definitionTable * definitionTableHead = NULL;
-    asmFile = DoPreProcess(argv);
 
-    aux = asmFile;
-    printf("\n");
-    while(aux != NULL)
-    {
-      printf("%s : LineCounter: %d\n", aux->Program, aux->LineCounter);
-      aux = aux->nextLine;
-    }
+    asmFile = DoPreProcess(argv);
+    // preProcess *aux;
+    // aux = asmFile;
+    // printf("\n");
+    // while(aux != NULL)
+    // {
+    //   printf("%s : LineCounter: %d\n", aux->Program, aux->LineCounter);
+    //   aux = aux->nextLine;
+    // }
     objCodeHead = DoFirstPass(asmFile, &symbolTableHead, &definitionTableHead);
-    DeletePreProcess(&asmFile);
+
   }
   else
   {
