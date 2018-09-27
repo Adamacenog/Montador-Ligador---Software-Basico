@@ -31,15 +31,21 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
 {
   objCode *objCodeHead = NULL;
   char item[51];
-  // Section = -1: indefinido,  0 - TEXT, 1 - DATA, 2 - BSS
-  int lineCounter = 0, section = -1;
+  // Section = -1: indefinido,  0 - TEXT, 1 - DATA, 2 - BSS | isModule - 1: tem Begin, 0 - : não tem Begin. Marca o inicio e fim do 'text' do modulo
+  int lineCounter = 0, section = -1, isModule = 0, isEndOfLine = 0;
 
   if(preProcessHead != NULL)
   {
-    if(strcmp(preProcessHead->Program, "SECTION TEXT") != 0)
+    while(preProcessHead != NULL)
     {
-      printf("Erro sintático na linha: %d.\n", preProcessHead->LineCounter);
-      exit(1);
+      GetItem(preProcessHead, item, &isEndOfLine);
+      printf("Program: |%s|, Item: |%s|, isEndOfLine: %d\n", preProcessHead->Program, item, isEndOfLine);
+
+      if(isEndOfLine)
+      {
+        preProcessHead = preProcessHead->nextLine;
+        isEndOfLine = 0;
+      }
     }
   }
   else
@@ -47,7 +53,6 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
     printf("Erro: Programa vazio.\n");
   }
 
-  DeletePreProcess(&preProcessHead);
   return objCodeHead;
 }
 
@@ -168,9 +173,48 @@ void AddDefinitionTableValue(definitionTable *definitionTableHead, symbolTable *
   }
 }
 
-// Retorna 1 se é opcode, 0 se não (de acordo com o char passado), bota tambem no 'argummentsN' a quantidade de argumentos do opcode, o opcode e o tamanho da operação em memoria
-int isOpcode(char *operation, int *argummentsN, int *Opcode, int *size)
+void DeleteObjCode(objCode **objCodeHead)
 {
+  objCode *aux;
+
+  while(*objCodeHead != NULL)
+  {
+    aux = *objCodeHead;
+    *objCodeHead = (*objCodeHead)->nextLine;
+    free(aux);
+  }
+}
+
+void DeleteSymbolTabel(symbolTable **symbolTableHead)
+{
+  symbolTable *aux;
+
+  while(*symbolTableHead != NULL)
+  {
+    aux = *symbolTableHead;
+    *symbolTableHead = (*symbolTableHead)->nextItem;
+    free(aux);
+  }
+}
+
+void DeleteDefinitionTable(definitionTable **definitionTableHead)
+{
+  definitionTable *aux;
+
+  while(*definitionTableHead != NULL)
+  {
+    aux = *definitionTableHead;
+    *definitionTableHead = (*definitionTableHead)->nextItem;
+    free(aux);
+  }
+}
+
+// Retorna 1 se é opcode, 0 se não (de acordo com o char passado), bota tambem no 'argummentsN' a quantidade de argumentos do opcode, o opcode e o tamanho da operação em memoria
+int isOpcode(char *operation, int *argummentsN, int *Opcode, int *size, int section, int lineCounter)
+{
+  if(section != 0)
+    printf("Erro semântico na linha: %d.\n", lineCounter);
+
   if(strcmp(operation, "ADD") == 0)
   {
     *argummentsN = 1;
@@ -276,7 +320,7 @@ int isOpcode(char *operation, int *argummentsN, int *Opcode, int *size)
 }
 
 // retorna 1 se for diretiva, 0 se não. primeiro item é o numero de operandos e o segundo item o tamanho.
-int isDirective(char *directive, int *argummentsN, int *size)
+int isDirective(char *directive, int *argummentsN, int *size, int *section, int lineCounter, int *isModule)
 {
   if(strcmp(directive, "SECTION") == 0)
   {
@@ -288,36 +332,64 @@ int isDirective(char *directive, int *argummentsN, int *size)
   {
     *argummentsN = 1;
     *size = 1;
+
+    if(*section != 2)
+      printf("Erro semântico na linha: %d.\n", lineCounter);
+
     return 1;
   }
   else if(strcmp(directive, "CONST") == 0)
   {
     *argummentsN = 1;
     *size = 1;
+
+    if(*section != 1)
+      printf("Erro semântico na linha: %d.\n", lineCounter);
+
     return 1;
   }
   else if(strcmp(directive, "PUBLIC") == 0)
   {
     *argummentsN = 0;
     *size = 0;
+
+    if(*section != 0)
+      printf("Erro semântico na linha: %d.\n", lineCounter);
+
     return 1;
   }
   else if(strcmp(directive, "EXTERN") == 0)
   {
     *argummentsN = 0;
     *size = 0;
+
+    if(*section != 0)
+      printf("Erro semântico na linha: %d.\n", lineCounter);
+
     return 1;
   }
   else if(strcmp(directive, "BEGIN") == 0)
   {
     *argummentsN = 0;
     *size = 0;
+    *isModule = 1;
+
+    if(*section != 0)
+      printf("Erro semântico na linha: %d.\n", lineCounter);
+
     return 1;
   }
   else if(strcmp(directive, "END") == 0)
   {
     *argummentsN = 0;
     *size = 0;
+
+    if(*section != 0 || *isModule != 1)
+      printf("Erro semântico na linha: %d.\n", lineCounter);
+
+    *section = -1;
+    *isModule = 0;
+
     return 1;
   }
   else
@@ -330,4 +402,68 @@ int isDirective(char *directive, int *argummentsN, int *size)
 int isLabelDeclaration(char *Label)
 {
   return StringContainsAtEnd(Label, ':', 51);
+}
+
+// Verifica se é TEXT, DATA ou BSS, retornando 1 se é algo, 0 se nenhum (altera o int de acordo com o formato section)
+int isWhichSection(char *item, int *section, int isModule, int lineCounter)
+{
+  if(strcmp(item, "TEXT") == 0)
+  {
+    *section = 1;
+    return 1;
+  }
+  else if(strcmp(item, "DATA") == 0)
+  {
+    *section = 2;
+
+    if(isModule != 0)
+      printf("Erro semântico na linha: %d.\n", lineCounter);
+
+    return 1;
+  }
+  else if(strcmp(item, "BSS") == 0)
+  {
+    *section = 3;
+
+    if(isModule != 0)
+      printf("Erro semântico na linha: %d.\n", lineCounter);
+
+    return 1;
+  }
+  else
+  {
+    return 0;
+  }
+}
+
+// Retorna o item do programa, e verifica se é o fim da linha ou não
+void GetItem(preProcess *preProcessLine, char *item, int *isEndOfLine)
+{
+  int i, j;
+  char vector[204];
+
+  ClearString(item, 51);
+  ClearString(vector, 204);
+
+  for(i = 0; i < 51; i++)
+  {
+    if(preProcessLine->Program[i] != 0x20 && preProcessLine->Program[i] != '\0')
+    {
+      item[i] = preProcessLine->Program[i];
+    }
+    else
+    {
+      if(preProcessLine->Program[i] == '\0')
+        *isEndOfLine = 1;
+
+      break;
+    }
+  }
+
+  i += 1;
+  for(j = 0; i < 204; j++, i++)
+    vector[j] = preProcessLine->Program[i];
+
+  ClearString(preProcessLine->Program, 204);
+  strcpy(preProcessLine->Program, vector);
 }

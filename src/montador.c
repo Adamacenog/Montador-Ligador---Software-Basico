@@ -28,8 +28,8 @@ int main(int argc, char *argv[])
   {
     preProcess *asmFile = NULL;
     objCode *objCodeHead = NULL;
-    symbolTable * symbolTableHead = NULL;
-    definitionTable * definitionTableHead = NULL;
+    symbolTable *symbolTableHead = NULL;
+    definitionTable *definitionTableHead = NULL;
 
     asmFile = DoPreProcess(argv);
     // preProcess *aux;
@@ -41,7 +41,10 @@ int main(int argc, char *argv[])
     //   aux = aux->nextLine;
     // }
     objCodeHead = DoFirstPass(asmFile, &symbolTableHead, &definitionTableHead);
-
+    DeletePreProcess(&asmFile);
+    DeleteObjCode(&objCodeHead);
+    DeleteSymbolTabel(&symbolTableHead);
+    DeleteDefinitionTable(&definitionTableHead);
   }
   else
   {
