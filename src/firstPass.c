@@ -32,7 +32,7 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
   objCode *objCodeHead = NULL;
   char item[51];
   // Section = -1: indefinido,  0 - TEXT, 1 - DATA, 2 - BSS | isModule - 1: tem Begin, 0 - : não tem Begin. Marca o inicio e fim do 'text' do modulo
-  int lineCounter = 0, section = -1, isModule = 0, isEndOfLine = 0;
+  int locationCounter = 0, section = -1, isModule = 0, isEndOfLine = 0;
 
   if(preProcessHead != NULL)
   {
