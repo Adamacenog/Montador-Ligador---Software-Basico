@@ -30,21 +30,100 @@ Jônatas Senna - mat.
 objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead, definitionTable **definitionTableHead)
 {
   objCode *objCodeHead = NULL;
-  char item[51];
+  char item[51], Operator1[51], Operator2[51];
   // Section = -1: indefinido,  0 - TEXT, 1 - DATA, 2 - BSS | isModule - 1: tem Begin, 0 - : não tem Begin. Marca o inicio e fim do 'text' do modulo
-  int locationCounter = 0, section = -1, isModule = 0, isEndOfLine = 0;
+  int locationCounter = 0, section = -1, isModule = 0, isEndOfLine = 0, directiveValue = 0, argummentsN = 0, needEndOfLine = 0;
+  int Opcode = -1, OpcodeLocationCouter = -1, Operator1LocationCouter = -1, Operator2LocationCouter = -1;
+
+  // Limpa os dados do Operator1 e Operator2
+  ClearString(Operator1, 51);
+  ClearString(Operator2, 51);
 
   if(preProcessHead != NULL)
   {
     while(preProcessHead != NULL)
     {
+      // needEndOfLine é 1 quando foi executado tudo que deveria ser na linha, usado para identificar se ainda
+      // tem algo nela, e para gerar um erro.
+      if(needEndOfLine)
+        printf("Erro sintático na linha: %d.\n", preProcessHead->LineCounter);
+
+      // Pega o primeiro item da lista do programa pre-processado
       GetItem(preProcessHead, item, &isEndOfLine);
-      printf("Program: |%s|, Item: |%s|, isEndOfLine: %d\n", preProcessHead->Program, item, isEndOfLine);
+
+      // Verifica se é uma label comum do programa (label:) - nunca será externo nesse caso
+      if(isLabelDeclaration(item))
+        AddSymBolTable(symbolTableHead, item, locationCounter, 0);
+
+      // Executa a diretiva encontrada no ultimo item
+      if(directiveValue != 0)
+      {
+        switch (directiveValue)
+        {
+          case 1: // Section
+            if(isWhichSection(item, &section, isModule, preProcessHead->LineCounter) == 0)
+              printf("Erro sintático na linha: %d.\n", preProcessHead->LineCounter);
+
+            argummentsN = 0;
+            needEndOfLine = 1;
+            break;
+
+          case 2: // Space
+            argummentsN = 0;
+            needEndOfLine = 1;
+            break;
+
+          case 3: // Const
+            if(item[0] >= 0x30 && item[0] <= 0x39 || item[0] == 0x2D && item[1] >= 0x30 && item[1] <= 0x39)
+            {
+              needEndOfLine = 1;
+              argummentsN = 0;
+              // Sera que pode labels no const? não está sendo considerado!! (apenas numeros positivo ou negativos)
+            }
+
+            break;
+
+          case 4: // Public
+            AddDefinitionTableLabel(definitionTableHead, item);
+            break;
+
+          case 5: // Extern
+            AddSymBolTable(symbolTableHead, item, 0, 1);
+            break;
+
+          case 6:
+
+            break;
+
+          case 7:
+
+            break;
+        }
+      }
+
+      // Verifica se é uma diretiva
+      directiveValue = isDirective(item, &argummentsN, &locationCounter, &section, preProcessHead->LineCounter, &isModule);
 
       if(isEndOfLine)
       {
+        if(argummentsN != 0 && directiveValue != 2)
+          printf("Erro semântico na linha: %d.\n", preProcessHead->LineCounter);
+
+        // Insere dados na lista do objCode
+        AddObjCode(&objCodeHead, Opcode, OpcodeLocationCouter, Operator1, Operator1LocationCouter, Operator2, Operator2LocationCouter, preProcessHead->LineCounter);
+
         preProcessHead = preProcessHead->nextLine;
+        // Limpa todos os dados
+        ClearString(Operator1, 51);
+        ClearString(Operator2, 51);
         isEndOfLine = 0;
+        needEndOfLine = 0;
+        argummentsN = 0;
+        directiveValue = 0;
+        Opcode = -1;
+        OpcodeLocationCouter = -1;
+        Operator1LocationCouter = -1;
+        Operator2LocationCouter = -1;
       }
     }
   }
@@ -319,78 +398,77 @@ int isOpcode(char *operation, int *argummentsN, int *Opcode, int *size, int sect
   }
 }
 
-// retorna 1 se for diretiva, 0 se não. primeiro item é o numero de operandos e o segundo item o tamanho.
+// retorna 0 se não for diretiva, numero da diretiva se for. primeiro item é o numero de operandos e o segundo item o tamanho.
 int isDirective(char *directive, int *argummentsN, int *size, int *section, int lineCounter, int *isModule)
 {
   if(strcmp(directive, "SECTION") == 0)
   {
     *argummentsN = 1;
-    *size = 0;
+    *size += 0;
     return 1;
   }
   else if(strcmp(directive, "SPACE") == 0)
   {
     *argummentsN = 1;
-    *size = 1;
+    *size += 1;
 
-    if(*section != 2)
+    if(*section != 3)
       printf("Erro semântico na linha: %d.\n", lineCounter);
 
-    return 1;
+    return 2;
   }
   else if(strcmp(directive, "CONST") == 0)
   {
     *argummentsN = 1;
-    *size = 1;
+    *size += 1;
 
-    if(*section != 1)
+    if(*section != 2)
       printf("Erro semântico na linha: %d.\n", lineCounter);
 
-    return 1;
+    return 3;
   }
   else if(strcmp(directive, "PUBLIC") == 0)
   {
     *argummentsN = 0;
-    *size = 0;
+    *size += 0;
 
     if(*section != 0)
       printf("Erro semântico na linha: %d.\n", lineCounter);
 
-    return 1;
+    return 4;
   }
   else if(strcmp(directive, "EXTERN") == 0)
   {
     *argummentsN = 0;
-    *size = 0;
+    *size += 0;
 
     if(*section != 0)
       printf("Erro semântico na linha: %d.\n", lineCounter);
 
-    return 1;
+    return 5;
   }
   else if(strcmp(directive, "BEGIN") == 0)
   {
     *argummentsN = 0;
-    *size = 0;
+    *size += 0;
     *isModule = 1;
 
     if(*section != 0)
       printf("Erro semântico na linha: %d.\n", lineCounter);
 
-    return 1;
+    return 6;
   }
   else if(strcmp(directive, "END") == 0)
   {
     *argummentsN = 0;
-    *size = 0;
+    *size += 0;
 
     if(*section != 0 || *isModule != 1)
       printf("Erro semântico na linha: %d.\n", lineCounter);
 
-    *section = -1;
     *isModule = 0;
 
-    return 1;
+    return 7;
   }
   else
   {
