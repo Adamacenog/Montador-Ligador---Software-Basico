@@ -138,12 +138,60 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
         wasEnd = 0;
 
       // Executa o opcode encontrado no ultimo item
+      if(Opcode != -1)
+      {
+        //argummentsN = 0;
+        switch (Opcode)
+        {
+          case 1: // ADD
+            break;
+
+          case 2: // SUB
+            break;
+
+          case 3: // MULT
+            break;
+
+          case 4: // DIV
+            break;
+
+          case 5: // JMP
+            break;
+
+          case 6: // JMPN
+            break;
+
+          case 7: // JMPP
+            break;
+
+          case 8: // JMPZ
+            break;
+
+          case 9: // COPY
+            break;
+
+          case 10: // LOAD
+            break;
+
+          case 11: // STORE
+            break;
+
+          case 12: // INPUT
+            break;
+
+          case 13: // OUTPUT
+            break;
+
+          case 14: // STOP
+            break;
+        }
+      }
 
       // Verifica se é um Opcode se não tiver diretivas. Não rechecar se já reconheceu um opcode.
       if(Opcode == -1 && directiveValue == 0)
       {
           OpcodeLocationCouter = locationCounter;
-          //isOpcode(item, &argummentsN, &Opcode, &locationCounter, section, preProcessHead->LineCounter);
+          isOpcode(item, &argummentsN, &Opcode, &locationCounter, section, preProcessHead->LineCounter);
       }
 
       if(isEndOfLine)
@@ -285,6 +333,7 @@ void AddDefinitionTableLabel(definitionTable **definitionTableHead, char *Label)
 
   // Copia os dados para o novo item do definitionTable
   strcpy(definitionTableCreator->Label, Label);
+  definitionTableCreator->Value = -1;
 }
 
 // Adiciona o valor dos itens definidos na tabela de simbolos na tabela de definições que ainda estão sem valor.
@@ -473,7 +522,7 @@ int isDirective(char *directive, int *argummentsN, int *size, int *section, int 
     *argummentsN = 0;
     *size += 0;
 
-    if(*section != 1)
+    if(*section != 1 || *isModule != 1)
       printf("Erro semântico na linha: %d.\n", lineCounter);
 
     return 4;
@@ -483,7 +532,7 @@ int isDirective(char *directive, int *argummentsN, int *size, int *section, int 
     *argummentsN = 0;
     *size += 0;
 
-    if(*section != 1)
+    if(*section != 1 || *isModule != 1)
       printf("Erro semântico na linha: %d.\n", lineCounter);
 
     return 5;
