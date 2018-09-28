@@ -156,9 +156,9 @@ preProcess* DoPreProcess(char **name)
         commaQuantity = StringContains(fileString, ',', 51);
         plusQuantity = StringContains(fileString, '+', 51);
         minusQuantity = StringContains(fileString, '-', 51);
-        if(fileString[0] >= 0x30 && fileString[0] <= 0x39 && fileString[1] != '\0' ||
-        twoPointsQuantity > 1 || twoPointsQuantity == 1 && StringContainsAtEnd(fileString, ':', 51) == 0 ||
-        commaQuantity > 1 || plusQuantity > 1 || minusQuantity > 1)
+        if(fileString[0] >= 0x30 && fileString[0] <= 0x39 && fileString[1] != '\0' && (strstr(saveFile, "CONST") == NULL)
+        && fileString[1] == 'X' && fileString[4] == '\0' || twoPointsQuantity > 1 || twoPointsQuantity == 1
+        && StringContainsAtEnd(fileString, ':', 51) == 0 || commaQuantity > 1 || plusQuantity > 1 || minusQuantity > 1)
         {
           printf("Erro léxico na linha: %d.\n", lineCount);
         }

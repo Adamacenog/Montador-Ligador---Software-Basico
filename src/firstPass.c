@@ -33,7 +33,7 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
   objCode *objCodeHead = NULL;
   char item[51], Operator1[51], Operator2[51];
   // Section = -1: indefinido,  1 - TEXT, 2 - DATA, 3 - BSS
-  int locationCounter = 0, section = -1, isEndOfLine = 0, directiveValue = 0, argummentsN = 0, needEndOfLine = 0, wasEnd = 0;
+  int locationCounter = 0, section = -1, isEndOfLine = 0, directiveValue = 0, argummentsN = 0, needEndOfLine = 0, wasEnd = 0, wasText = 0;
   int Opcode = -1, OpcodeLocationCouter = -1, Operator1LocationCouter = -1, isRelative1 = -1, Operator2LocationCouter = -1, isRelative2 = -1;
 
   // Limpa os dados do Operator1 e Operator2
@@ -67,6 +67,10 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
 
             argummentsN = 0;
             needEndOfLine = 1;
+
+            if(section == 1)
+              wasText = 1;
+
             break;
 
           case 2: // Space
@@ -145,7 +149,7 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
       if(isEndOfLine)
       {
         // Caso alguma diretiva / instrução execute mais do que deveria dos seus argumentos
-        if(argummentsN != 0 && directiveValue != 2)
+        if(argummentsN != 0 && directiveValue != 2 || wasText != 1)
           printf("Erro semântico na linha: %d.\n", preProcessHead->LineCounter);
 
         // Caso a instrução 'Space' tenha algum label + numero (verificar se tudo está OK)
@@ -154,7 +158,7 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
             printf("Erro sintático na linha: %d.\n", preProcessHead->LineCounter);
 
         // Insere dados na lista do objCode
-        if(directiveValue == 0 || directiveValue == 2 || directiveValue == 3)
+        if(Opcode != -1 || directiveValue == 2 || directiveValue == 3)
           AddObjCode(&objCodeHead, Opcode, OpcodeLocationCouter, Operator1, Operator1LocationCouter, isRelative1, Operator2, Operator2LocationCouter, isRelative2, preProcessHead->LineCounter);
 
         preProcessHead = preProcessHead->nextLine;
@@ -545,6 +549,7 @@ int isWhichSection(char *item, int *section, int wasEnd, int lineCounter)
   }
   else
   {
+    printf("Erro sintático na linha: %d.\n", lineCounter);
     return 0;
   }
 }
