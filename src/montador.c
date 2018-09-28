@@ -30,6 +30,7 @@ int main(int argc, char *argv[])
     objCode *objCodeHead = NULL;
     symbolTable *symbolTableHead = NULL;
     definitionTable *definitionTableHead = NULL;
+    int isModule = 0;
 
     asmFile = DoPreProcess(argv);
     // preProcess *aux;
@@ -40,7 +41,7 @@ int main(int argc, char *argv[])
     //   printf("%s : LineCounter: %d\n", aux->Program, aux->LineCounter);
     //   aux = aux->nextLine;
     // }
-    objCodeHead = DoFirstPass(asmFile, &symbolTableHead, &definitionTableHead);
+    objCodeHead = DoFirstPass(asmFile, &symbolTableHead, &definitionTableHead, &isModule);
     DeletePreProcess(&asmFile);
     DeleteObjCode(&objCodeHead);
     DeleteSymbolTabel(&symbolTableHead);
