@@ -156,10 +156,39 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
         switch (Opcode)
         {
           case 9: // COPY
-            argummentsN = 0;
-            // Para cada operando tem q fazer isso
-            locationCounter += 1;
-            locationCounter += 1;
+            argummentsN -= 1; // Foi add um argumento
+
+            if(item[0] == ',' && item[1] == '\0') // Caso a virgula venha só
+            {
+              argummentsN += 1; // Desconsidera a passagem dela
+            }
+
+            if(Operator1[0] != '\0')
+            {
+              // Adiciona os itens no Operator2
+              strcat(Operator2, item);
+
+              if(item[0] == '+' && item[1] != '\0' || StringContainsAtEnd(item, '+', 51))
+                argummentsN += 1; // Caso tenha uma soma junto a algum operando, tem que somar 1 (pois serão só 2 itens)
+
+              if(item[0] == '+' && item[1] == '\0')
+                argummentsN += 2; // Caso tenha uma soma sozinha, tem que adicionar 2 (pois tera um argumento na esquerda e um na direita)
+
+              if(isEndOfLine) // Adiciona os itens do Operator2
+              {
+                Operator1LocationCouter = locationCounter;
+                isRelative1 = 1;
+                locationCounter += 1;
+                Operator2LocationCouter = locationCounter;
+                locationCounter += 1;
+                isRelative2 = 1;
+              }
+            }
+            else
+            {
+              strcpy(Operator1, item);
+            }
+
             break;
 
           case 14: // STOP
@@ -184,6 +213,7 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
               locationCounter += 1;
               isRelative1 = 1;
             }
+
             break;
         }
       }
@@ -208,6 +238,16 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
         // Caso alguma diretiva / instrução execute mais do que deveria dos seus argumentos e verificação do Operator1
         if(argummentsN != 0 || Operator1[0] == '+' || StringContainsAtEnd(Operator1, '+', 51))
             printf("Erro sintático na linha: %d.\n", preProcessHead->LineCounter);
+
+        // Casos de erro com a virgula
+        if(Opcode == 9 && StringContains(Operator1, ',', 51) >= 1 && StringContains(Operator2, ',', 51) >= 1
+          || Opcode != 9 && StringContains(Operator1, ',', 51) >= 1 || Opcode == 9 && Operator1[0] == ','
+          || Opcode == 9 && StringContains(Operator1, ',', 51) == 0 && StringContains(Operator2, ',', 51) == 0)
+          printf("Erro sintático na linha: %d.\n", preProcessHead->LineCounter);
+
+        // Remove as virgulas do Opt1 e Opt2
+        RemoveChar(',', Operator1, 51, 0);
+        RemoveChar(',', Operator2, 51, 0);
 
         // Insere dados na lista do objCode
         if(Opcode != -1 || directiveValue == 2 || directiveValue == 3)
