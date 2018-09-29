@@ -54,7 +54,7 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
 
       // Verifica se é uma label comum do programa (label:) - nunca será externo nesse caso
       if(isLabelDeclaration(item))
-        AddSymBolTable(symbolTableHead, item, locationCounter, 0);
+        AddSymBolTable(symbolTableHead, item, locationCounter, 0, preProcessHead->LineCounter);
 
       // Executa a diretiva encontrada no ultimo item
       if(directiveValue != 0)
@@ -98,12 +98,12 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
             break;
 
           case 4: // Public
-            AddDefinitionTableLabel(definitionTableHead, item);
+            AddDefinitionTableLabel(definitionTableHead, item, preProcessHead->LineCounter);
             needEndOfLine = 1;
             break;
 
           case 5: // Extern
-            AddSymBolTable(symbolTableHead, item, 0, 1);
+            AddSymBolTable(symbolTableHead, item, 0, 1, preProcessHead->LineCounter);
             needEndOfLine = 1;
             break;
 
@@ -140,49 +140,32 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
       // Executa o opcode encontrado no ultimo item
       if(Opcode != -1)
       {
-        //argummentsN = 0;
+        argummentsN = 0;
         switch (Opcode)
         {
-          case 1: // ADD
-            break;
-
-          case 2: // SUB
-            break;
-
-          case 3: // MULT
-            break;
-
-          case 4: // DIV
-            break;
-
-          case 5: // JMP
-            break;
-
-          case 6: // JMPN
-            break;
-
-          case 7: // JMPP
-            break;
-
-          case 8: // JMPZ
-            break;
-
           case 9: // COPY
-            break;
-
-          case 10: // LOAD
-            break;
-
-          case 11: // STORE
-            break;
-
-          case 12: // INPUT
-            break;
-
-          case 13: // OUTPUT
+            argummentsN = 0;
+            // Para cada operando tem q fazer isso
+            locationCounter += 1;
+            locationCounter += 1;
             break;
 
           case 14: // STOP
+            printf("Erro sintático na linha: %d.\n", preProcessHead->LineCounter);
+            break;
+
+          default: // ADD SUB MULT DIV JMP JMPN JMPP JMPZ LOAD STORE INPUT OUTPUT
+
+            // Adiciona os itens no Operator1
+            strcat(Operator1, item);
+
+            if(isEndOfLine)
+            {
+              argummentsN = 0;
+              Operator1LocationCouter = locationCounter;
+              locationCounter += 1;
+              isRelative1 = 1;
+            }
             break;
         }
       }
@@ -192,6 +175,10 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
       {
           OpcodeLocationCouter = locationCounter;
           isOpcode(item, &argummentsN, &Opcode, &locationCounter, section, preProcessHead->LineCounter);
+
+          // Reseta o OpcodeLocationCouter caso não tenha ocorrido algum opcode
+          if(Opcode == -1)
+            OpcodeLocationCouter = -1;
       }
 
       if(isEndOfLine)
@@ -204,6 +191,14 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
         if(directiveValue == 2 && StringContains(Operator1, 0x20, 51) >= 1 && StringContains(Operator1, '+', 51) == 0
           || Operator1[0] == '+' || StringContainsAtEnd(Operator1, '+', 51) || directiveValue == 2 && StringContains(Operator1, 0x20, 51) > 2)
             printf("Erro sintático na linha: %d.\n", preProcessHead->LineCounter);
+
+        // Verifica se o Operator1 para todos os opcodes menos o -1, copy e stop estão de acordo sintaticamente
+        if(Opcode != -1 && Opcode != 9 && Opcode != 14)
+        {
+          if(StringContains(Operator1, '+', 51) > 1 || Operator1[0] == '+' || StringContainsAtEnd(Operator1, '+', 51) || StringContains(Operator1, 0x20, 51) > 2
+          || StringContains(Operator1, 0x20, 51) >= 1 && StringContains(Operator1, '+', 51) == 0)
+            printf("Erro sintático na linha: %d.\n", preProcessHead->LineCounter);
+        }
 
         // Insere dados na lista do objCode
         if(Opcode != -1 || directiveValue == 2 || directiveValue == 3)
@@ -274,39 +269,68 @@ void AddObjCode(objCode **objCodeHead, int Opcode, int OpcodeLocationCouter, cha
   objCodeCreator->LineCounter = LineCounter;
 }
 
-void AddSymBolTable(symbolTable **symbolTableHead, char *Label, int Value, int isExtern)
+void AddSymBolTable(symbolTable **symbolTableHead, char *Label, int Value, int isExtern, int LineCounter)
 {
   symbolTable *symbolTableCreator, *lastElem;
 
-  // Alocação da memória para o symbolTable
-  symbolTableCreator = (symbolTable *) malloc(sizeof(symbolTable));
+  // Remoção do ':' do label.
+  RemoveChar(':', Label, 51, 1);
 
-  if(*symbolTableHead == NULL)
+  if(SymbolTableContains(*symbolTableHead, Label) == 0)
   {
-    (*symbolTableHead) = symbolTableCreator;
-    (*symbolTableHead)->nextItem = NULL;
-    (*symbolTableHead)->previousItem = NULL;
+    // Alocação da memória para o symbolTable
+    symbolTableCreator = (symbolTable *) malloc(sizeof(symbolTable));
+
+    if(*symbolTableHead == NULL)
+    {
+      (*symbolTableHead) = symbolTableCreator;
+      (*symbolTableHead)->nextItem = NULL;
+      (*symbolTableHead)->previousItem = NULL;
+    }
+    else
+    {
+      lastElem = *symbolTableHead;
+
+      while(lastElem->nextItem != NULL)
+        lastElem = lastElem->nextItem;
+
+      symbolTableCreator->previousItem = lastElem;
+      lastElem->nextItem = symbolTableCreator;
+      symbolTableCreator->nextItem = NULL;
+    }
+
+    // Copia os dados para o novo item do symbolTable
+    strcpy(symbolTableCreator->Label, Label);
+    symbolTableCreator->Value = Value;
+    symbolTableCreator->isExtern = isExtern;
   }
   else
   {
-    lastElem = *symbolTableHead;
-
-    while(lastElem->nextItem != NULL)
-      lastElem = lastElem->nextItem;
-
-    symbolTableCreator->previousItem = lastElem;
-    lastElem->nextItem = symbolTableCreator;
-    symbolTableCreator->nextItem = NULL;
+    printf("Erro semântico na linha: %d.\n", LineCounter);
   }
-
-  // Copia os dados para o novo item do symbolTable
-  strcpy(symbolTableCreator->Label, Label);
-  symbolTableCreator->Value = Value;
-  symbolTableCreator->isExtern = isExtern;
 }
 
-// Adiciona apenas o label na tabela de definições, deixando o valor não preenchido
-void AddDefinitionTableLabel(definitionTable **definitionTableHead, char *Label)
+// Checa se a tabela de simbolos ja contem o label, retornando 1 se contem, 0 se não.
+int SymbolTableContains(symbolTable *symbolTableHead, char *Label)
+{
+  if(symbolTableHead != NULL)
+  {
+    while(symbolTableHead != NULL)
+    {
+      if(strcmp(symbolTableHead->Label, Label) == 0)
+        return 1;
+
+      symbolTableHead = symbolTableHead->nextItem;
+    }
+  }
+  else
+  {
+    return 0;
+  }
+}
+
+// Adiciona apenas o label na tabela de definições, deixando o valor preenchido com a linha do label (para identificação do erro quando não se encontrar o simbolo na tabela de simbolos)
+void AddDefinitionTableLabel(definitionTable **definitionTableHead, char *Label, int lineCounter)
 {
   definitionTable *definitionTableCreator, *lastElem;
 
@@ -333,7 +357,7 @@ void AddDefinitionTableLabel(definitionTable **definitionTableHead, char *Label)
 
   // Copia os dados para o novo item do definitionTable
   strcpy(definitionTableCreator->Label, Label);
-  definitionTableCreator->Value = -1;
+  definitionTableCreator->Value = lineCounter;
 }
 
 // Adiciona o valor dos itens definidos na tabela de simbolos na tabela de definições que ainda estão sem valor.
@@ -343,18 +367,33 @@ void AddDefinitionTableValue(definitionTable *definitionTableHead, symbolTable *
 
   if(definitionTableHead != NULL && symbolTableHead != NULL)
   {
-    while(definitionTableHead->nextItem != NULL)
+    while(definitionTableHead != NULL)
     {
       auxSymbolTable = symbolTableHead;
-      while(auxSymbolTable->nextItem != NULL)
+      while(auxSymbolTable != NULL)
       {
         if(strcmp(auxSymbolTable->Label, definitionTableHead->Label) == 0)
         {
           definitionTableHead->Value = auxSymbolTable->Value;
           break;
         }
-        auxSymbolTable = auxSymbolTable->nextItem;
+
+        if(auxSymbolTable->nextItem != NULL)
+        {
+          auxSymbolTable = auxSymbolTable->nextItem;
+        }
+        else
+        {
+          break;
+        }
       }
+      // Caso o elemento não tenha sido achado na tabela de simbolos
+      if(strcmp(auxSymbolTable->Label, definitionTableHead->Label) != 0)
+      {
+        printf("Erro semântico na linha: %d.\n", definitionTableHead->Value);
+        definitionTableHead->Value = -1; // Bota valor equivalente ao 'null'
+      }
+
       definitionTableHead = definitionTableHead->nextItem;
     }
   }
