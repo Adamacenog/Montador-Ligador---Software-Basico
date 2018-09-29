@@ -37,6 +37,7 @@ objCode * DoFirstPass(preProcess *, symbolTable **, definitionTable **, int *);
 void AddObjCode(objCode **, int, int, char *, int, int, char *, int, int, int);
 void AddSymBolTable(symbolTable **, char *, int, int, int);
 int SymbolTableContains(symbolTable *, char *); // Checa se a tabela de simbolos ja contem o label, retornando 1 se contem, 0 se não.
+int SymbolTableContainsValue(symbolTable *, int); // Checa se está sendo add mais de um label em uma unica linha
 void AddDefinitionTableLabel(definitionTable **, char *, int); // Adiciona apenas o label na tabela de definições, deixando o valor preenchido com a linha do label (para identificação do erro quando não se encontrar o simbolo na tabela de simbolos)
 void AddDefinitionTableValue(definitionTable *, symbolTable *);
 void DeleteObjCode(objCode **);
