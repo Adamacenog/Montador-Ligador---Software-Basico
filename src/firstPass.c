@@ -74,10 +74,22 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
             break;
 
           case 2: // Space
-            Operator1LocationCouter = locationCounter -1;
-            argummentsN = 0;
+
             strcat(Operator1, item);
-            isRelative1 = 0;
+            argummentsN -= 1; // Foi add um argumento
+
+            if(item[0] == '+' && item[1] != '\0' || StringContainsAtEnd(item, '+', 51))
+              argummentsN += 1; // Caso tenha uma soma junto a algum operando, tem que somar 1 (pois serão só 2 itens)
+
+            if(item[0] == '+' && item[1] == '\0')
+              argummentsN += 2; // Caso tenha uma soma sozinha, tem que adicionar 2 (pois tera um argumento na esquerda e um na direita)
+
+            if(isEndOfLine)
+            {
+              Operator1LocationCouter = locationCounter -1;
+              isRelative1 = 0;
+            }
+
             break;
 
           case 3: // Const
@@ -127,6 +139,7 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
           Operator1LocationCouter = locationCounter -1;
           isRelative1 = 0;
           Operator1[0] = 0x31;
+          argummentsN = 0;
       }
 
       // Seta que houve um Begin
@@ -140,7 +153,6 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
       // Executa o opcode encontrado no ultimo item
       if(Opcode != -1)
       {
-        argummentsN = 0;
         switch (Opcode)
         {
           case 9: // COPY
@@ -158,10 +170,16 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
 
             // Adiciona os itens no Operator1
             strcat(Operator1, item);
+            argummentsN -= 1; // Foi add um argumento
+
+            if(item[0] == '+' && item[1] != '\0' || StringContainsAtEnd(item, '+', 51))
+              argummentsN += 1; // Caso tenha uma soma junto a algum operando, tem que somar 1 (pois serão só 2 itens)
+
+            if(item[0] == '+' && item[1] == '\0')
+              argummentsN += 2; // Caso tenha uma soma sozinha, tem que adicionar 2 (pois tera um argumento na esquerda e um na direita)
 
             if(isEndOfLine)
             {
-              argummentsN = 0;
               Operator1LocationCouter = locationCounter;
               locationCounter += 1;
               isRelative1 = 1;
@@ -183,22 +201,13 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
 
       if(isEndOfLine)
       {
-        // Caso alguma diretiva / instrução execute mais do que deveria dos seus argumentos
-        if(argummentsN != 0 && directiveValue != 2 || wasText != 1)
+        // Caso não tenha sido SECTION TEXT no inicio do código
+        if(wasText != 1)
           printf("Erro semântico na linha: %d.\n", preProcessHead->LineCounter);
 
-        // Caso a instrução 'Space' tenha algum label + numero (verificar se tudo está OK)
-        if(directiveValue == 2 && StringContains(Operator1, 0x20, 51) >= 1 && StringContains(Operator1, '+', 51) == 0
-          || Operator1[0] == '+' || StringContainsAtEnd(Operator1, '+', 51) || directiveValue == 2 && StringContains(Operator1, 0x20, 51) > 2)
+        // Caso alguma diretiva / instrução execute mais do que deveria dos seus argumentos e verificação do Operator1
+        if(argummentsN != 0 || Operator1[0] == '+' || StringContainsAtEnd(Operator1, '+', 51))
             printf("Erro sintático na linha: %d.\n", preProcessHead->LineCounter);
-
-        // Verifica se o Operator1 para todos os opcodes menos o -1, copy e stop estão de acordo sintaticamente
-        if(Opcode != -1 && Opcode != 9 && Opcode != 14)
-        {
-          if(StringContains(Operator1, '+', 51) > 1 || Operator1[0] == '+' || StringContainsAtEnd(Operator1, '+', 51) || StringContains(Operator1, 0x20, 51) > 2
-          || StringContains(Operator1, 0x20, 51) >= 1 && StringContains(Operator1, '+', 51) == 0)
-            printf("Erro sintático na linha: %d.\n", preProcessHead->LineCounter);
-        }
 
         // Insere dados na lista do objCode
         if(Opcode != -1 || directiveValue == 2 || directiveValue == 3)
