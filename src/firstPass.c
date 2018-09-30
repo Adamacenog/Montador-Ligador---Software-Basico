@@ -31,7 +31,7 @@ Jônatas Senna - mat.
 objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead, definitionTable **definitionTableHead, int *isModule)
 {
   objCode *objCodeHead = NULL;
-  char item[51], Operator1[51], Operator2[51];
+  char item[51], Operator1[51], Operator2[51], label[51];
   // Section = -1: indefinido,  1 - TEXT, 2 - DATA, 3 - BSS
   int locationCounter = 0, section = -1, isEndOfLine = 0, directiveValue = 0, argummentsN = 0, needEndOfLine = 0, wasEnd = 0, wasText = 0, wasLabel = 0;
   int Opcode = -1, OpcodeLocationCouter = -1, Operator1LocationCouter = -1, isRelative1 = -1, Operator2LocationCouter = -1, isRelative2 = -1;
@@ -39,6 +39,7 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
   // Limpa os dados do Operator1 e Operator2
   ClearString(Operator1, 51);
   ClearString(Operator2, 51);
+  ClearString(label, 51);
 
   if(preProcessHead != NULL)
   {
@@ -55,7 +56,13 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
       // Verifica se é uma label comum do programa (label:) - nunca será externo nesse caso
       if(isLabelDeclaration(item))
       {
-        AddSymBolTable(symbolTableHead, item, locationCounter, 0, preProcessHead->LineCounter);
+        strcpy(label, item);
+        GetItem(preProcessHead, item, &isEndOfLine); // Pega o proximo item (para verificar se o proximo é externo)
+
+        // Adiciona na lista de simbolos apenas se não tiver sido um externo
+        if(strcmp(item, "EXTERN") != 0)
+          AddSymBolTable(symbolTableHead, label, locationCounter, 0, preProcessHead->LineCounter);
+
         wasLabel = 1;
       }
 
@@ -117,8 +124,7 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
             break;
 
           case 5: // Extern
-            AddSymBolTable(symbolTableHead, item, 0, 1, preProcessHead->LineCounter);
-            needEndOfLine = 1;
+            printf("Erro sintático na linha: %d.\n", preProcessHead->LineCounter);
             break;
 
           case 6: // Begin
@@ -133,7 +139,7 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
 
       // Verifica se é uma diretiva (não recheca, pois pode acontecer duas etapas (primeira para pegar o sinal do numero, segunda para pegar o numero))
       if(directiveValue == 0)
-        directiveValue = isDirective(item, &argummentsN, &locationCounter, &section, preProcessHead->LineCounter, isModule);
+        directiveValue = isDirective(item, &argummentsN, &locationCounter, &section, preProcessHead->LineCounter, isModule, label, symbolTableHead);
 
       // Se houve um Space (não necessariamente precisa de um operador, quando não possui operador, assume-se 1)
       if(directiveValue == 2 && isEndOfLine && Operator1[0] == '\0')
@@ -266,6 +272,7 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
         // Limpa todos os dados
         ClearString(Operator1, 51);
         ClearString(Operator2, 51);
+        ClearString(label, 51);
         isEndOfLine = 0;
         needEndOfLine = 0;
         argummentsN = 0;
@@ -333,7 +340,7 @@ void AddSymBolTable(symbolTable **symbolTableHead, char *Label, int Value, int i
   // Remoção do ':' do label.
   RemoveChar(':', Label, 51, 1);
 
-  if(SymbolTableContains(*symbolTableHead, Label) == 0 && SymbolTableContainsValue(*symbolTableHead, Value) == 0)
+  if(SymbolTableContains(*symbolTableHead, Label) == 0 && SymbolTableContainsValue(*symbolTableHead, Value, isExtern) == 0)
   {
     // Alocação da memória para o symbolTable
     symbolTableCreator = (symbolTable *) malloc(sizeof(symbolTable));
@@ -382,14 +389,17 @@ int SymbolTableContains(symbolTable *symbolTableHead, char *Label)
 }
 
 // Checa se está sendo add mais de um label em uma unica linha
-int SymbolTableContainsValue(symbolTable *symbolTableHead, int Value)
+int SymbolTableContainsValue(symbolTable *symbolTableHead, int Value, int isExtern)
 {
-  while(symbolTableHead != NULL)
+  if(isExtern == 0)
   {
-    if(symbolTableHead->Value == Value)
-      return 1;
+    while(symbolTableHead != NULL)
+    {
+      if(symbolTableHead->Value == Value)
+        return 1;
 
-    symbolTableHead = symbolTableHead->nextItem;
+      symbolTableHead = symbolTableHead->nextItem;
+    }
   }
 
   return 0;
@@ -616,7 +626,7 @@ void isOpcode(char *operation, int *argummentsN, int *Opcode, int *size, int sec
 }
 
 // retorna 0 se não for diretiva, numero da diretiva se for. primeiro item é o numero de operandos e o segundo item o tamanho.
-int isDirective(char *directive, int *argummentsN, int *size, int *section, int lineCounter, int *isModule)
+int isDirective(char *directive, int *argummentsN, int *size, int *section, int lineCounter, int *isModule, char *label, symbolTable **symbolTableHead)
 {
   if(strcmp(directive, "SECTION") == 0)
   {
@@ -658,6 +668,9 @@ int isDirective(char *directive, int *argummentsN, int *size, int *section, int 
   {
     *argummentsN = 0;
     *size += 0;
+
+    // Adiciona a label na lista de simbolos
+    AddSymBolTable(symbolTableHead, label, 0, 1, lineCounter);
 
     if(*section != 1 || *isModule != 1)
       printf("Erro semântico na linha: %d.\n", lineCounter);
