@@ -72,15 +72,12 @@ preProcess* DoPreProcess(char **name)
       // Caso tenha tido algum EQU no codigo
       if(wasEqu)
       {
-        if(strcmp(fileString, "") == 0)
-          printf("Erro sintático na linha: %d.\n", lineCount);
-
         valueInt = strtol(fileString,&ptr,10);
         AddValueEquTable(tableHead, valueInt);
         noMoreItem = 1;
 
         // Caso tenha apenas letras sem numero
-        if(strcmp(ptr, "") != 0 && (fileString[0] < 0x30 || fileString[0] > 0x39))
+        if(strcmp(ptr, "") != 0 && (fileString[0] < 0x30 || fileString[0] > 0x39) || strcmp(fileString, "") == 0)
           printf("Erro sintático na linha: %d.\n", lineCount);
 
         wasEqu = 0;
@@ -89,9 +86,6 @@ preProcess* DoPreProcess(char **name)
       // Caso tenha tido algum IF no codigo
       if(wasIf)
       {
-        if(strcmp(fileString, "") == 0)
-          printf("Erro sintático na linha: %d.\n", lineCount);
-
         IsInEqu(tableHead, fileString);
 
         valueInt = strtol(fileString,&ptr,10);
@@ -100,11 +94,8 @@ preProcess* DoPreProcess(char **name)
           removeLine = 2; // remove a linha do 'if' e a linha abaixo dele
 
         // Caso tenha apenas letras sem numero
-        if(strcmp(ptr, "") != 0 && (fileString[0] < 0x30 || fileString[0] > 0x39))
-        {
+        if(strcmp(ptr, "") != 0 && (fileString[0] < 0x30 || fileString[0] > 0x39) || strcmp(fileString, "") == 0)
           printf("Erro sintático na linha: %d.\n", lineCount);
-          removeLine = 0;
-        }
 
         noMoreItem = 1;
         wasIf = 0;
@@ -300,42 +291,51 @@ void AddLabelEquTable(equTable **tableHead, char *saveFile, int lineCount)
 {
   equTable *tableCreator = NULL, *tableAux = NULL;
 
-  // Criação da tabela de itens 'equ'
-  tableCreator = (equTable *) malloc(sizeof(equTable));
-
-  if(*tableHead == NULL)
+  // Identificação da existência de ':' APENAS no final do label
+  if(StringContains(saveFile, ':', 204) == 1 && StringContainsAtEnd(saveFile, ':', 204) == 1)
   {
-    *tableHead = tableCreator;
-    tableCreator->nextItem = NULL;
-    tableCreator->previousItem = NULL;
+    // Criação da tabela de itens 'equ'
+    tableCreator = (equTable *) malloc(sizeof(equTable));
+
+    if(*tableHead == NULL)
+    {
+      *tableHead = tableCreator;
+      tableCreator->nextItem = NULL;
+      tableCreator->previousItem = NULL;
+    }
+    else
+    {
+      tableAux = (*tableHead);
+      while(tableAux->nextItem != NULL)
+        tableAux = tableAux->nextItem;
+
+      tableCreator->nextItem = NULL;
+      tableCreator->previousItem = tableAux;
+      tableAux->nextItem = tableCreator;
+    }
+
+    // Remoção de ':'
+    RemoveChar(':', saveFile, 204, 1);
+    strcpy(tableCreator->Label, saveFile);
   }
   else
   {
-    tableAux = (*tableHead);
-    while(tableAux->nextItem != NULL)
-      tableAux = tableAux->nextItem;
-
-    tableCreator->nextItem = NULL;
-    tableCreator->previousItem = tableAux;
-    tableAux->nextItem = tableCreator;
+    // Para a mensagem de erro quando não tem nenhum ':'
+    if(StringContains(saveFile, ':', 204) == 0)
+      printf("Erro léxico na linha: %d.\n", lineCount);
   }
-
-  // Identificação da existência de ':' APENAS no final do label
-  if(StringContains(saveFile, ':', 204) != 1 || StringContainsAtEnd(saveFile, ':', 204) == 0)
-    printf("Erro léxico na linha: %d.\n", lineCount);
-
-  // Remoção de ':'
-  RemoveChar(':', saveFile, 204, 1);
-  strcpy(tableCreator->Label, saveFile);
 }
 
 // Seta o valor do fim da lista EquTable
 void AddValueEquTable(equTable *tableHead, int value)
 {
-  while(tableHead->nextItem != NULL)
-    tableHead = tableHead->nextItem;
+  if(tableHead != NULL)
+  {
+    while(tableHead->nextItem != NULL)
+      tableHead = tableHead->nextItem;
 
-  tableHead->Value = value;
+    tableHead->Value = value;
+  }
 }
 
 // Deleta toda a lista EquTable
