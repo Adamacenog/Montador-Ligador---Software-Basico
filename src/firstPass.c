@@ -103,7 +103,6 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
               Operator1LocationCouter = locationCounter -1;
               strcat(Operator1, item);
               isRelative1 = 0;
-              // Sera que pode labels ou somas no const? não está sendo considerado!! (apenas numeros positivo ou negativos)
             }
             else
             {
@@ -371,39 +370,29 @@ void AddSymBolTable(symbolTable **symbolTableHead, char *Label, int Value, int i
 // Checa se a tabela de simbolos ja contem o label, retornando 1 se contem, 0 se não.
 int SymbolTableContains(symbolTable *symbolTableHead, char *Label)
 {
-  if(symbolTableHead != NULL)
+  while(symbolTableHead != NULL)
   {
-    while(symbolTableHead != NULL)
-    {
-      if(strcmp(symbolTableHead->Label, Label) == 0)
-        return 1;
+    if(strcmp(symbolTableHead->Label, Label) == 0)
+      return 1;
 
-      symbolTableHead = symbolTableHead->nextItem;
-    }
+    symbolTableHead = symbolTableHead->nextItem;
   }
-  else
-  {
-    return 0;
-  }
+
+  return 0;
 }
 
 // Checa se está sendo add mais de um label em uma unica linha
 int SymbolTableContainsValue(symbolTable *symbolTableHead, int Value)
 {
-  if(symbolTableHead != NULL)
+  while(symbolTableHead != NULL)
   {
-    while(symbolTableHead != NULL)
-    {
-      if(symbolTableHead->Value == Value)
-        return 1;
+    if(symbolTableHead->Value == Value)
+      return 1;
 
-      symbolTableHead = symbolTableHead->nextItem;
-    }
+    symbolTableHead = symbolTableHead->nextItem;
   }
-  else
-  {
-    return 0;
-  }
+
+  return 0;
 }
 
 // Adiciona apenas o label na tabela de definições, deixando o valor preenchido com a linha do label (para identificação do erro quando não se encontrar o simbolo na tabela de simbolos)
@@ -411,30 +400,52 @@ void AddDefinitionTableLabel(definitionTable **definitionTableHead, char *Label,
 {
   definitionTable *definitionTableCreator, *lastElem;
 
-  // Alocação da memória para o definitionTable
-  definitionTableCreator = (definitionTable *) malloc(sizeof(definitionTable));
-
-  if(*definitionTableHead == NULL)
+  // Verifica se está sendo adicionada na tabela de definições algum label repetido (isso é um erro)
+  if(DefinitionTableContains(*definitionTableHead, Label) == 0)
   {
-    (*definitionTableHead) = definitionTableCreator;
-    (*definitionTableHead)->nextItem = NULL;
-    (*definitionTableHead)->previousItem = NULL;
+    // Alocação da memória para o definitionTable
+    definitionTableCreator = (definitionTable *) malloc(sizeof(definitionTable));
+
+    if(*definitionTableHead == NULL)
+    {
+      (*definitionTableHead) = definitionTableCreator;
+      (*definitionTableHead)->nextItem = NULL;
+      (*definitionTableHead)->previousItem = NULL;
+    }
+    else
+    {
+      lastElem = *definitionTableHead;
+
+      while(lastElem->nextItem != NULL)
+        lastElem = lastElem->nextItem;
+
+      definitionTableCreator->previousItem = lastElem;
+      lastElem->nextItem = definitionTableCreator;
+      definitionTableCreator->nextItem = NULL;
+    }
+
+    // Copia os dados para o novo item do definitionTable
+    strcpy(definitionTableCreator->Label, Label);
+    definitionTableCreator->Value = lineCounter;
   }
   else
   {
-    lastElem = *definitionTableHead;
+    printf("Erro semântico na linha: %d.\n", lineCounter);
+  }
+}
 
-    while(lastElem->nextItem != NULL)
-      lastElem = lastElem->nextItem;
+// Verifica se a tabela de definições já contem o label.
+int DefinitionTableContains(definitionTable *definitionTableHead, char *Label)
+{
+  while(definitionTableHead != NULL)
+  {
+    if(strcmp(definitionTableHead->Label, Label) == 0)
+      return 1;
 
-    definitionTableCreator->previousItem = lastElem;
-    lastElem->nextItem = definitionTableCreator;
-    definitionTableCreator->nextItem = NULL;
+    definitionTableHead = definitionTableHead->nextItem;
   }
 
-  // Copia os dados para o novo item do definitionTable
-  strcpy(definitionTableCreator->Label, Label);
-  definitionTableCreator->Value = lineCounter;
+  return 0;
 }
 
 // Adiciona o valor dos itens definidos na tabela de simbolos na tabela de definições que ainda estão sem valor.

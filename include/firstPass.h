@@ -48,3 +48,4 @@ int isDirective(char *, int *, int *, int *, int, int *); // retorna 1 se for di
 int isLabelDeclaration(char *); // Retorna 1 se for uma declaração de label, 0 se não
 int isWhichSection(char *, int *, int, int); // Verifica se é TEXT, DATA ou BSS, retornando 1 se é algo, 0 se nenhum (altera o int de acordo com o formato section)
 void GetItem(preProcess *, char *, int *); // Retorna o item do programa, e verifica se é o fim da linha ou não
+int DefinitionTableContains(definitionTable *, char *); // Verifica se a tabela de definições já contem o label.
