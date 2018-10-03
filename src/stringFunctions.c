@@ -77,3 +77,26 @@ int StringContainsAtEnd(char *string, char item, int size)
 
   return 0;
 }
+
+// Compara todos os caracteres menos o ultimo, retorna 1 se for igual, 0 se for diferente
+int StringCompareButEnd(char *item1, char *item2, int size1, int size2)
+{
+  int smallest = size1 > size2 ? size2 : size1;
+
+  for(int i = 0; i < smallest; i++)
+  {
+    if(item1[i] != item2[i])
+    {
+      if(item1[i] == '\0' && item2[i + 1] == '\0' || item2[i] == '\0' && item1[i + 1] == '\0')
+      {
+        return 1;
+      }
+      else
+      {
+        return 0;
+      }
+    }
+  }
+
+  return 1;
+}

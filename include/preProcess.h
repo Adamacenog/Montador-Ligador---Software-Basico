@@ -20,7 +20,7 @@ typedef struct EquTable
 
 preProcess* DoPreProcess(char **);
 FILE * OpenAsmFile(char **);
-void IsInEqu(equTable*, char *); // Verifica se esta na tabela Equ, se estiver, bota o valor do item da tabela na string passada.
+void IsInEqu(equTable*, char *, int); // Verifica se esta na tabela Equ, se estiver, bota o valor do item da tabela na string passada.
 void AddPreProcess(preProcess**, char *, int); // Adiciona ao fim da lista PreProcess (ou cria a lista caso seja NULL)
 void DeletePreProcess(preProcess**); // Deleta toda a lista PreProcess
 void AddLabelEquTable(equTable**, char *, int); // Adiciona ao fim da lista EquTable (ou cria a lista caso seja NULL), inteiro serve para identificar o numero da linha com erro.

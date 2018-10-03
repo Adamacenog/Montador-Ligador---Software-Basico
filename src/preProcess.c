@@ -86,7 +86,7 @@ preProcess* DoPreProcess(char **name)
       // Caso tenha tido algum IF no codigo
       if(wasIf)
       {
-        IsInEqu(tableHead, fileString);
+        IsInEqu(tableHead, fileString, lineCount);
 
         valueInt = strtol(fileString,&ptr,10);
 
@@ -155,7 +155,7 @@ preProcess* DoPreProcess(char **name)
         }
 
 
-        IsInEqu(tableHead, fileString);
+        IsInEqu(tableHead, fileString, lineCount);
         strcat(saveFile, fileString);
         strcat(saveFile, " ");
       }
@@ -230,7 +230,7 @@ FILE * OpenAsmFile(char **name)
   return asmFile;
 }
 
-void IsInEqu(equTable *EquHead, char *item)
+void IsInEqu(equTable *EquHead, char *item, int lineCount)
 {
   while(EquHead != NULL)
   {
@@ -239,6 +239,9 @@ void IsInEqu(equTable *EquHead, char *item)
       sprintf(item, "%d", EquHead->Value);
       break;
     }
+
+    if(StringContainsAtEnd(item, ':', 51) == 1 && StringCompareButEnd(item, EquHead->Label, 51, 51) == 1)
+      printf("Erro semântico na linha: %d.\n", lineCount);
 
     EquHead = EquHead->nextItem;
   }
