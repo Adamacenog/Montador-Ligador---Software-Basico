@@ -112,9 +112,16 @@ preProcess* DoPreProcess(char **name)
 
           if(StringContains(saveFile, 0x20, 204) == 0 && StringContains(saveFile, 0x09, 204) == 0)
           {
-            AddLabelEquTable(&tableHead, saveFile, lineCount);
+            if(AddLabelEquTable(&tableHead, saveFile, lineCount) == 1)
+            {
+              wasEqu = 1;
+            }
+            else
+            {
+              wasEqu = 0;
+            }
+
             removeLine = 1;
-            wasEqu = 1;
           }
           else
           {
@@ -289,13 +296,13 @@ void DeletePreProcess(preProcess **preProcessHead)
   }
 }
 
-// Adiciona ao fim da lista EquTable (ou cria a lista caso seja NULL), inteiro serve para identificar o numero da linha com erro.
-void AddLabelEquTable(equTable **tableHead, char *saveFile, int lineCount)
+// Adiciona ao fim da lista EquTable (ou cria a lista caso seja NULL), inteiro serve para identificar o numero da linha com erro. Retorna 1 se foi add com sucesso, 0 caso contrario
+int AddLabelEquTable(equTable **tableHead, char *saveFile, int lineCount)
 {
   equTable *tableCreator = NULL, *tableAux = NULL;
 
   // Identificação da existência de ':' APENAS no final do label
-  if(StringContains(saveFile, ':', 204) == 1 && StringContainsAtEnd(saveFile, ':', 204) == 1)
+  if(StringContains(saveFile, ':', 204) == 1 && StringContainsAtEnd(saveFile, ':', 204) == 1 && EquTableContains(*tableHead, saveFile) == 0)
   {
     // Criação da tabela de itens 'equ'
     tableCreator = (equTable *) malloc(sizeof(equTable));
@@ -320,13 +327,30 @@ void AddLabelEquTable(equTable **tableHead, char *saveFile, int lineCount)
     // Remoção de ':'
     RemoveChar(':', saveFile, 204, 1);
     strcpy(tableCreator->Label, saveFile);
+    return 1;
   }
   else
   {
     // Para a mensagem de erro quando não tem nenhum ':'
     if(StringContains(saveFile, ':', 204) == 0)
       printf("Erro léxico na linha: %d.\n", lineCount);
+
+    return 0;
   }
+}
+
+// Verifica se label ja esta na tabela, se estiver, retorna 1, caso contrario 0
+int EquTableContains(equTable *tableHead, char *string)
+{
+  while(tableHead != NULL)
+  {
+    if(StringCompareButEnd(tableHead->Label, string, 51, 51) == 1)
+      return 1;
+
+    tableHead = tableHead->nextItem;
+  }
+
+  return 0;
 }
 
 // Seta o valor do fim da lista EquTable
