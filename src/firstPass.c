@@ -33,7 +33,7 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
   objCode *objCodeHead = NULL;
   char item[51], Operator1[51], Operator2[51], label[51];
   // Section = -1: indefinido,  1 - TEXT, 2 - DATA, 3 - BSS
-  int locationCounter = 0, section = -1, isEndOfLine = 0, directiveValue = 0, argummentsN = 0, needEndOfLine = 0, wasEnd = 0, wasText = 0, wasLabel = 0;
+  int locationCounter = 0, section = -1, isEndOfLine = 0, directiveValue = 0, argummentsN = 0, needEndOfLine = 0, wasEnd = 0, wasText = 0, wasLabel = 0, wasStop = 0;
   int Opcode = -1, OpcodeLocationCouter = -1, Operator1LocationCouter = -1, isRelative1 = -1, Operator2LocationCouter = -1, isRelative2 = -1;
 
   // Limpa os dados do Operator1 e Operator2
@@ -72,7 +72,7 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
         switch (directiveValue)
         {
           case 1: // Section
-            if(isWhichSection(item, &section, wasEnd, preProcessHead->LineCounter) == 0)
+            if(isWhichSection(item, &section, wasEnd, preProcessHead->LineCounter, &wasStop, *isModule) == 0)
               printf("Erro sintático na linha: %d.\n", preProcessHead->LineCounter);
 
             argummentsN = 0;
@@ -237,6 +237,10 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
             OpcodeLocationCouter = -1;
       }
 
+      // identificação de que houve um opcode stop.
+      if(Opcode == 14)
+        wasStop = 1;
+
       if(Opcode == -1 && directiveValue == 0 && isEndOfLine == 1 && wasLabel == 0)
         printf("Erro sintático na linha: %d.\n", preProcessHead->LineCounter);
 
@@ -266,6 +270,10 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
         // Insere dados na lista do objCode
         if(Opcode != -1 || directiveValue == 2 || directiveValue == 3)
           AddObjCode(&objCodeHead, Opcode, OpcodeLocationCouter, Operator1, Operator1LocationCouter, isRelative1, Operator2, Operator2LocationCouter, isRelative2, preProcessHead->LineCounter);
+
+        // Caso acabe o programa e ele não é modulo e não houve a instrução 'Stop'
+        if(preProcessHead->nextLine == NULL && wasStop != 1 && *isModule == 0)
+          printf("Erro semântico na linha: %d.\n", preProcessHead->LineCounter);
 
         preProcessHead = preProcessHead->nextLine;
 
@@ -711,7 +719,7 @@ int isLabelDeclaration(char *Label)
 }
 
 // Verifica se é TEXT, DATA ou BSS, retornando 1 se é algo, 0 se nenhum (altera o int de acordo com o formato section)
-int isWhichSection(char *item, int *section, int wasEnd, int lineCounter)
+int isWhichSection(char *item, int *section, int wasEnd, int lineCounter, int *wasStop, int isModule)
 {
   if(strcmp(item, "TEXT") == 0)
   {
@@ -722,8 +730,10 @@ int isWhichSection(char *item, int *section, int wasEnd, int lineCounter)
   {
     *section = 2;
 
-    if(wasEnd != 0)
+    if(wasEnd != 0 || *wasStop != 1 && isModule == 0)
       printf("Erro semântico na linha: %d.\n", lineCounter);
+
+    *wasStop = 1;
 
     return 1;
   }
@@ -731,8 +741,10 @@ int isWhichSection(char *item, int *section, int wasEnd, int lineCounter)
   {
     *section = 3;
 
-    if(wasEnd != 0)
+    if(wasEnd != 0 || *wasStop != 1 && isModule == 0)
       printf("Erro semântico na linha: %d.\n", lineCounter);
+
+    *wasStop = 1;
 
     return 1;
   }
