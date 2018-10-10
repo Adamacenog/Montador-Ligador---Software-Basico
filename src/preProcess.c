@@ -228,7 +228,7 @@ preProcess* DoPreProcess(char **name)
     }
 
     IsInEqu(tableHead, fileString, lineCount);
-    strcpy(saveFile, fileString);
+    strcat(saveFile, fileString);
   }
 
   // Caso o arquivo '.asm' termine e não tenha um '\n' no final do arquivo (antes de terminar) e esteja no saveFile
