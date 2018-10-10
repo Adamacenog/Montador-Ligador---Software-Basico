@@ -250,7 +250,7 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
       if(isEndOfLine)
       {
         // Caso não tenha sido SECTION TEXT no inicio do código
-        if(wasText != 1)
+        if(wasText != 1 && directiveValue != 6)
           printf("Erro semântico na linha: %d.\n", preProcessHead->LineCounter);
 
         // Caso alguma diretiva / instrução execute mais do que deveria dos seus argumentos e verificação do Operator1
@@ -691,7 +691,7 @@ int isDirective(char *directive, int *argummentsN, int *size, int *section, int 
     *size += 0;
     *isModule = 1;
 
-    if(*section != 1)
+    if(*section != -1)
       printf("Erro semântico na linha: %d.\n", lineCounter);
 
     return 6;
