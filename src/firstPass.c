@@ -116,10 +116,6 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
               strcat(Operator1, item);
               isRelative1 = 0;
             }
-            else
-            {
-              printf("Erro sintático na linha: %d.\n", preProcessHead->LineCounter);
-            }
 
             break;
 
