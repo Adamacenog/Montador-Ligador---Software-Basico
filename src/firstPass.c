@@ -112,6 +112,7 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
               needEndOfLine = 1;
               argummentsN = 0;
               Operator1LocationCouter = locationCounter -1;
+              ConvertFromHexToDecimal(item, preProcessHead->LineCounter); // Converte o hexadecimal para decimal (se for hexadecimal)
               strcat(Operator1, item);
               isRelative1 = 0;
             }
@@ -788,4 +789,23 @@ void GetItem(preProcess *preProcessLine, char *item, int *isEndOfLine)
 
   ClearString(preProcessLine->Program, 204);
   strcpy(preProcessLine->Program, vector);
+}
+
+// Converte um valor 16 bits hexadecimal para decimal (valor em string, se for maior que 16 bits gera msg de erro)
+void ConvertFromHexToDecimal(char *item, int lineCount)
+{
+  if(StringContains(item, 'X', 51) >= 1)
+  {
+    char *ptr;
+    int number = (int)strtol(item, &ptr, 0);
+
+    if(strcmp(ptr, "") != 0)
+      printf("Erro léxico na linha: %d.\n", lineCount);
+
+    if(item[4] != '\0')
+      printf("Erro sintático na linha: %d.\n", lineCount);
+
+    ClearString(item, 51);
+    sprintf(item, "%d", number);
+  }
 }

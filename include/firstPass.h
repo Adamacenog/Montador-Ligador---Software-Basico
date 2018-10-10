@@ -49,3 +49,4 @@ int isLabelDeclaration(char *); // Retorna 1 se for uma declaração de label, 0
 int isWhichSection(char *, int *, int, int *, int); // Verifica se é TEXT, DATA ou BSS, retornando 1 se é algo, 0 se nenhum (altera o int de acordo com o formato section)
 void GetItem(preProcess *, char *, int *); // Retorna o item do programa, e verifica se é o fim da linha ou não
 int DefinitionTableContains(definitionTable *, char *); // Verifica se a tabela de definições já contem o label.
+void ConvertFromHexToDecimal(char *, int); // Converte um valor 16 bits hexadecimal para decimal (valor em string, se for maior que 16 bits gera msg de erro)
