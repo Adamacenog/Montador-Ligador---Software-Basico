@@ -46,8 +46,8 @@ preProcess* DoPreProcess(char **name)
       while((fileItem = fgetc(asmFile)) != '\n' && fileItem != EOF);
     }
 
-    // Remoção de tabs, espaços e novas linhas
-    if(fileItem != 0x20 && fileItem != 0x09 && fileItem != '\n')
+    // Remoção de tabs, espaços, novas linhas e 'carriage return'
+    if(fileItem != 0x20 && fileItem != 0x09 && fileItem != '\n' && fileItem != 0xD)
     {
         // Checa os caracteres para caracter ilegal
         if(fileItem == 0x2D || fileItem == 0x5F || fileItem == 0x3A || fileItem == 0x2C || fileItem == 0x2B || fileItem >= 0x30 && fileItem <= 0x39 || fileItem >= 0x41 && fileItem <= 0x5A)
