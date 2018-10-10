@@ -8,7 +8,7 @@ Como compilar:
 * Para compilar apenas o montador, digite 'make montador'
 * Para compilar apenas o ligador, digite 'make ligador'
 
--![#f03c15]O programa é compilado usando o padrão -std=c99 do gcc.`#f03c15`
+-![#f03c15](O programa é compilado usando o padrão -std=c99 do gcc.)`#f03c15`
 
 Ambiente:
 Ubuntu 16.04.5 LTS - Release: 16.04, versão gcc: (Ubuntu 5.4.0-6ubuntu1~16.04.10) 5.4.0 20160609
