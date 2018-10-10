@@ -211,6 +211,47 @@ preProcess* DoPreProcess(char **name)
     }
   }
 
+  // Caso o arquivo '.asm' termine e não tenha um '\n' no final do arquivo (antes de terminar) e esteja no fileString
+  if(fileString[0] != '\0' && strcmp(fileString, "") != 0)
+  {
+    // Verificação final de erros léxicos (pode conter ':', ',' apenas no final e não pode ter numeros no inicio,
+    // '+' devem estar separados unicamente por espaços (ficar sozinhos na string)) e o '-' deve vir acompanhado de um numero
+    twoPointsQuantity = StringContains(fileString, ':', 51);
+    commaQuantity = StringContains(fileString, ',', 51);
+    plusQuantity = StringContains(fileString, '+', 51);
+    minusQuantity = StringContains(fileString, '-', 51);
+    if(fileString[0] >= 0x30 && fileString[0] <= 0x39 && fileString[1] != '\0' && (strstr(saveFile, "CONST") == NULL)
+    && fileString[1] == 'X' && fileString[4] == '\0' || twoPointsQuantity > 1 || twoPointsQuantity == 1
+    && StringContainsAtEnd(fileString, ':', 51) == 0 || commaQuantity > 1 || plusQuantity > 1 || minusQuantity > 1)
+    {
+      printf("Erro léxico na linha: %d.\n", lineCount);
+    }
+
+    IsInEqu(tableHead, fileString, lineCount);
+    strcpy(saveFile, fileString);
+  }
+
+  // Caso o arquivo '.asm' termine e não tenha um '\n' no final do arquivo (antes de terminar) e esteja no saveFile
+  if(saveFile[0] != '\0' && strcmp(saveFile, "") != 0)
+  {
+    // Se tiver algo na string do arquivo e a quantidade de linhas ignoradas for zero
+    if(removeLine == 0)
+    {
+      // Identificação de erros na 'frase': Só pode ter um ':', '+', '-', ',' na frase
+      twoPointsQuantity = StringContains(saveFile, ':', 204);
+      commaQuantity = StringContains(saveFile, ',', 204);
+      plusQuantity = StringContains(saveFile, '+', 204);
+      minusQuantity = StringContains(saveFile, '-', 204);
+      if(twoPointsQuantity > 1 || commaQuantity > 1 || plusQuantity > 1 || minusQuantity > 1 || plusQuantity == 1 && minusQuantity == 1)
+        printf("Erro sintático na linha: %d.\n", lineCount);
+
+      // Remoção de espaço e tabs no final da instrução
+      RemoveChar(0x20, saveFile, 204, 1);
+      RemoveChar(0x09, saveFile, 204, 1);
+      AddPreProcess(&asmContent, saveFile, lineCount);
+    }
+  }
+
   fclose(asmFile);
   PrintPreProcess(asmContent, name);
   DeleteEquTable(&tableHead);
