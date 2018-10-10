@@ -53,6 +53,10 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
       // Pega o primeiro item da lista do programa pre-processado
       GetItem(preProcessHead, item, &isEndOfLine);
 
+      // Erro caso ja tenha ocorrido o END, e ainda tenha código no arquivo .asm
+      if(*isModule == 1 && wasEnd == 0 && (isEndOfLine == 1 || preProcessHead->nextLine == NULL))
+        printf("Erro semântico na linha: %d.\n", preProcessHead->LineCounter);
+
       // Verifica se é uma label comum do programa (label:) - nunca será externo nesse caso
       if(isLabelDeclaration(item))
       {
@@ -72,7 +76,7 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
         switch (directiveValue)
         {
           case 1: // Section
-            if(isWhichSection(item, &section, wasEnd, preProcessHead->LineCounter, &wasStop, *isModule) == 0)
+            if(isWhichSection(item, &section, preProcessHead->LineCounter, &wasStop, *isModule) == 0)
               printf("Erro sintático na linha: %d.\n", preProcessHead->LineCounter);
 
             argummentsN = 0;
@@ -271,8 +275,8 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
         if(Opcode != -1 || directiveValue == 2 || directiveValue == 3)
           AddObjCode(&objCodeHead, Opcode, OpcodeLocationCouter, Operator1, Operator1LocationCouter, isRelative1, Operator2, Operator2LocationCouter, isRelative2, preProcessHead->LineCounter);
 
-        // Caso acabe o programa e ele não é modulo e não houve a instrução 'Stop'
-        if(preProcessHead->nextLine == NULL && wasStop != 1 && *isModule == 0)
+        // Caso acabe o programa e ele não é modulo e não houve a instrução 'Stop' ou ele é módulo e não houve 'End'
+        if(preProcessHead->nextLine == NULL && wasStop != 1 && *isModule == 0 || preProcessHead->nextLine == NULL && *isModule == 1 && wasEnd == 1)
           printf("Erro semântico na linha: %d.\n", preProcessHead->LineCounter);
 
         preProcessHead = preProcessHead->nextLine;
@@ -701,7 +705,7 @@ int isDirective(char *directive, int *argummentsN, int *size, int *section, int 
     *argummentsN = 0;
     *size += 0;
 
-    if(*section != 1 || *isModule != 1)
+    if(*isModule != 1)
       printf("Erro semântico na linha: %d.\n", lineCounter);
 
     return 7;
@@ -719,7 +723,7 @@ int isLabelDeclaration(char *Label)
 }
 
 // Verifica se é TEXT, DATA ou BSS, retornando 1 se é algo, 0 se nenhum (altera o int de acordo com o formato section)
-int isWhichSection(char *item, int *section, int wasEnd, int lineCounter, int *wasStop, int isModule)
+int isWhichSection(char *item, int *section, int lineCounter, int *wasStop, int isModule)
 {
   if(strcmp(item, "TEXT") == 0)
   {
@@ -730,7 +734,7 @@ int isWhichSection(char *item, int *section, int wasEnd, int lineCounter, int *w
   {
     *section = 2;
 
-    if(wasEnd != 0 || *wasStop != 1 && isModule == 0)
+    if(*wasStop != 1 && isModule == 0)
       printf("Erro semântico na linha: %d.\n", lineCounter);
 
     *wasStop = 1;
@@ -741,7 +745,7 @@ int isWhichSection(char *item, int *section, int wasEnd, int lineCounter, int *w
   {
     *section = 3;
 
-    if(wasEnd != 0 || *wasStop != 1 && isModule == 0)
+    if(*wasStop != 1 && isModule == 0)
       printf("Erro semântico na linha: %d.\n", lineCounter);
 
     *wasStop = 1;

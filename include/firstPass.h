@@ -46,6 +46,6 @@ void DeleteDefinitionTable(definitionTable **);
 void isOpcode(char *, int *, int *, int *, int, int); // 'argummentsN' a quantidade de argumentos do opcode, o opcode e o tamanho da operação em memoria
 int isDirective(char *, int *, int *, int *, int, int *, char *, symbolTable **); // retorna 1 se for diretiva, 0 se não. primeiro item é o numero de operandos e o segundo item o tamanho.
 int isLabelDeclaration(char *); // Retorna 1 se for uma declaração de label, 0 se não
-int isWhichSection(char *, int *, int, int, int *, int); // Verifica se é TEXT, DATA ou BSS, retornando 1 se é algo, 0 se nenhum (altera o int de acordo com o formato section)
+int isWhichSection(char *, int *, int, int *, int); // Verifica se é TEXT, DATA ou BSS, retornando 1 se é algo, 0 se nenhum (altera o int de acordo com o formato section)
 void GetItem(preProcess *, char *, int *); // Retorna o item do programa, e verifica se é o fim da linha ou não
 int DefinitionTableContains(definitionTable *, char *); // Verifica se a tabela de definições já contem o label.
