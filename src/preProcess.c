@@ -90,7 +90,7 @@ preProcess* DoPreProcess(char **name)
 
         valueInt = strtol(fileString,&ptr,10);
 
-        if(valueInt != 1 && strcmp(ptr, "") == 0)
+        if(valueInt == 0 && strcmp(ptr, "") == 0)
           removeLine = 2; // remove a linha do 'if' e a linha abaixo dele
 
         // Caso tenha apenas letras sem numero
