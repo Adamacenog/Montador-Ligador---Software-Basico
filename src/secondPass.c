@@ -40,11 +40,12 @@ void secondPass(char* argv, objCode* codes, symbolTable* symbols, definitionTabl
     symbolTable *aux3;
     aux3 = symbols;
     fprintf(saida,"TABLE USE\n");
-    aux = codes;
+
     while(aux3 != NULL)
     {
       if(aux3->isExtern == 1)
       {
+        aux = codes;
         while(aux != NULL)
         {
           if(strstr(aux->Operator1,aux3->Label)!= NULL)
