@@ -784,7 +784,7 @@ void GetItem(preProcess *preProcessLine, char *item, int *isEndOfLine)
     vector[j] = preProcessLine->Program[i];
 
   ClearString(preProcessLine->Program, 204);
-  strcpy(preProcessLine->Program, vector);
+  memcpy(preProcessLine->Program, vector, 204);
 }
 
 // Converte um valor 16 bits hexadecimal para decimal (valor em string, se for maior que 16 bits gera msg de erro)
