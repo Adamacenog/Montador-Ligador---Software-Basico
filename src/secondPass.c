@@ -140,7 +140,7 @@ void secondPass(char* argv, objCode* codes, symbolTable* symbols, definitionTabl
                 }else
                 {
 
-                    printf("Erro Semantico - Simbolo nao existente!");
+                    printf("Erro Semantico - linha %d - Simbolo nao existente!", aux->LineCounter);
                   }
               }else if(flag2 == 1)
               {
@@ -150,7 +150,7 @@ void secondPass(char* argv, objCode* codes, symbolTable* symbols, definitionTabl
                   fprintf(saida, "%d ", flag+number2);
                 }else
                 {
-                    printf("Erro Semantico - Simbolo nao existente!");
+                    printf("Erro Semantico - linha %d - Simbolo nao existente!", aux->LineCounter);
                 }
               }
             }
@@ -197,7 +197,7 @@ void secondPass(char* argv, objCode* codes, symbolTable* symbols, definitionTabl
                       fprintf(saida, "%d ", flag);
                     }else
                     {
-                      printf("Erro  Semantico - Simbolo nao existente!");
+                      printf("Erro  Semantico - linha %d - Simbolo nao existente!", aux->LineCounter);
                     }
                   }
                 }else if(flag2 == 2)
@@ -208,7 +208,7 @@ void secondPass(char* argv, objCode* codes, symbolTable* symbols, definitionTabl
                     fprintf(saida, "%d ", flag+number2);
                   }else
                   {
-                      printf("Erro  Semantico - Simbolo nao existente!");
+                      printf("Erro  Semantico - linha %d - Simbolo nao existente!", aux->LineCounter);
                   }
                 }
               }
@@ -262,7 +262,7 @@ char* locateError(objCode* codeList, objCode* code, symbolTable *symbols)
     case 4:
       if(code->Operator2 == 0 || evaluate( code->Operator2, symbols, codeList) == 0)
       {
-        printf("Erro Semantico - Divisao por zero!\n");
+        printf("Erro Semantico - linha %d - Divisao por zero!\n", code->LineCounter);
       }
       break;
     case 5:
@@ -296,7 +296,7 @@ char* locateError(objCode* codeList, objCode* code, symbolTable *symbols)
     {
        if(!evaluateNum(flag+number2, codeList))
        {
-         printf("Erro Semantico - Jump para local nao permitido!\n");
+         printf("Erro Semantico - linha %d - Jump para local nao permitido!\n", code->LineCounter);
        }
     }
     break;
