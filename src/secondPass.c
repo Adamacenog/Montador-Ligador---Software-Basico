@@ -26,7 +26,7 @@
     #include "secondPass.h"
 #endif
 
-void secondPass(char* argv, objCode* codes, symbolTable* symbols, definitionTable* definitions)
+void secondPass(char* argv, objCode* codes, symbolTable* symbols, definitionTable* definitions, int isModule)
 {
   FILE  *saida;
   char line[500], lineOld[500], instruction[50], *dump, flag2=0, flag=0, label[50];
@@ -35,14 +35,29 @@ void secondPass(char* argv, objCode* codes, symbolTable* symbols, definitionTabl
   objCode* aux;
  strcpy(line,argv);
   saida = fopen( strcat(line,".obj"),"w");
-  if(definitions != NULL)//se é módulo
+  if(isModule)//se é módulo
   {
     symbolTable *aux3;
     aux3 = symbols;
     fprintf(saida,"TABLE USE\n");
+    aux = codes;
     while(aux3 != NULL)
     {
-      fprintf(saida,"%s  %d\n", aux3->Label, aux3->Value);
+      if(aux3->isExtern == 1)
+      {
+        while(aux != NULL)
+        {
+          if(strstr(aux->Operator1,aux3->Label)!= NULL)
+          {
+            fprintf(saida,"%s  %d\n", aux3->Label, aux->Operator1LocationCouter);
+          }
+          if(strstr(aux->Operator2,aux3->Label)!= NULL)
+          {
+            fprintf(saida,"%s  %d\n", aux3->Label, aux->Operator2LocationCouter);
+          }
+          aux = aux->nextLine;
+        }
+      }
       aux3 = aux3->nextItem;
     }
 
@@ -57,63 +72,16 @@ void secondPass(char* argv, objCode* codes, symbolTable* symbols, definitionTabl
     aux = codes;
     i=0;
     fprintf(saida,"RELATIVE\n");
-    while(aux != NULL)
-    {
-      i+=2;
-      aux = aux->nextLine;
-    }
-    aux = codes;
-    printVector = (int*)malloc(i);
-    k = 0;
     while(aux!= NULL)
     {
-      flag=1;
-      j=0;
-      while(j <= i)
+      if(aux->isRelative1 == 1)
       {
-        if(aux->Operator1LocationCouter == printVector[j] || aux->isRelative1 == 0 || printVector[j] == 0)
+        fprintf(saida, "%d ", aux->Operator1LocationCouter);
+      }
+        if(aux->isRelative2 == 1 )
         {
-          flag = 0;
-          if(printVector[j] == 0 && aux->isRelative1 == 1)
-          {
-            flag = 1;
-          }
-          break;
-        }
-        j++;
-      }
-      if(flag!=0)
-      {
-          printVector[k] = aux->Operator1LocationCouter;
-          fprintf(saida, "%d ", aux->Operator1LocationCouter);
-          k++;
-      }
-
-      flag=1;
-      j=0;
-      while(j <= i)
-      {
-        if(aux->Operator2LocationCouter == printVector[j] || aux->isRelative2 == 0 || printVector[j] == 0)
-        {
-          flag = 0;
-          if(printVector[j] == 0 && aux->isRelative2 == 1)
-          {
-            flag = 1;
-          }
-          break;
-        }
-        j++;
-      }
-      if(flag!=0)
-      {
-          printVector[k] = aux->Operator2LocationCouter;
           fprintf(saida, "%d ", aux->Operator2LocationCouter);
-          k++;
       }
-      // if(aux->nextLine == 0x0)
-      // {
-      //   break;
-      // }
       aux = aux->nextLine;
     }
     fprintf(saida,"\nCODE\n");
@@ -170,15 +138,9 @@ void secondPass(char* argv, objCode* codes, symbolTable* symbols, definitionTabl
                   fprintf(saida, "%d ", flag);
                 }else
                 {
-                  flag = findDefinition(definitions, aux->Operator1);
-                  if(flag >= 0)
-                  {
-                    fprintf(saida, "%d ", flag);
-                  }else
-                  {
-                    printf("Erro - Definicao ou Simbolo nao existente!");
+
+                    printf("Erro Semantico - Simbolo nao existente!");
                   }
-                }
               }else if(flag2 == 1)
               {
                 flag = findSymbol(symbols, label);
@@ -187,14 +149,7 @@ void secondPass(char* argv, objCode* codes, symbolTable* symbols, definitionTabl
                   fprintf(saida, "%d ", flag+number2);
                 }else
                 {
-                  flag = findDefinition(definitions, label);
-                  if(flag >= 0)
-                  {
-                    fprintf(saida, "%d ", flag+number2);
-                  }else
-                  {
-                    printf("Erro - Definicao ou Simbolo nao existente!");
-                  }
+                    printf("Erro Semantico - Simbolo nao existente!");
                 }
               }
             }
@@ -241,7 +196,7 @@ void secondPass(char* argv, objCode* codes, symbolTable* symbols, definitionTabl
                       fprintf(saida, "%d ", flag);
                     }else
                     {
-                      printf("Erro - Definicao ou Simbolo nao existente!");
+                      printf("Erro  Semantico - Simbolo nao existente!");
                     }
                   }
                 }else if(flag2 == 2)
@@ -252,14 +207,7 @@ void secondPass(char* argv, objCode* codes, symbolTable* symbols, definitionTabl
                     fprintf(saida, "%d ", flag+number2);
                   }else
                   {
-                    flag = findDefinition(definitions, label);
-                    if(flag >= 0)
-                    {
-                      fprintf(saida, "%d ", flag+number2);
-                    }else
-                    {
-                      printf("Simbolo nao definido!");
-                    }
+                      printf("Erro  Semantico - Simbolo nao existente!");
                   }
                 }
               }
@@ -313,7 +261,7 @@ char* locateError(objCode* codeList, objCode* code, symbolTable *symbols)
     case 4:
       if(code->Operator2 == 0 || evaluate( code->Operator2, symbols, codeList) == 0)
       {
-        printf("Erro - Divisao por zero!\n");
+        printf("Erro Semantico - Divisao por zero!\n");
       }
       break;
     case 5:
@@ -347,7 +295,7 @@ char* locateError(objCode* codeList, objCode* code, symbolTable *symbols)
     {
        if(!evaluateNum(flag+number2, codeList))
        {
-         printf("Erro - Jump para local nao permitido!\n");
+         printf("Erro Semantico - Jump para local nao permitido!\n");
        }
     }
     break;

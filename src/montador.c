@@ -85,6 +85,8 @@ int main(int argc, char *argv[])
 
     printf("\n");
 
+    secondPass(argv[1], objCodeHead, symbolTableHead, definitionTableHead, isModule);
+
     DeleteObjCode(&objCodeHead);
     DeleteSymbolTabel(&symbolTableHead);
     DeleteDefinitionTable(&definitionTableHead);
