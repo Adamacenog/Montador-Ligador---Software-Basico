@@ -3,6 +3,7 @@ Trabalho 1 da matéria de Software Básico da UnB.
 
 Como compilar:
 
+* Crie a pasta ./Montador-Ligador---Software-Basico/src/obj 
 * Abra ./Montador-Ligador---Software-Basico/src/ no terminal
 * Digite 'make' isso irá compilar o projeto inteiro (montador e ligador)
 * Para compilar apenas o montador, digite 'make montador'
