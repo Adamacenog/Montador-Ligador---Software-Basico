@@ -82,33 +82,47 @@ void DoSecondPass(char* argv, objCode* codes, symbolTable* symbols, definitionTa
     {
       if(aux->isRelative1 == 1)
       {
-        fprintf(saida, "%d ", aux->Operator1LocationCouter);
+        if(i == 1)
+          fprintf(saida, "%c", 0x20);
+
+        fprintf(saida, "%d", aux->Operator1LocationCouter);
+        i = 1;
       }
 
       if(aux->isRelative2 == 1 )
       {
-        fprintf(saida, "%d ", aux->Operator2LocationCouter);
+        if(i == 1)
+          fprintf(saida, "%c", 0x20);
+
+        fprintf(saida, "%d", aux->Operator2LocationCouter);
+        i = 1;
       }
       aux = aux->nextLine;
     }
     fprintf(saida,"\nCODE\n");
   }
 
+  i = 0;
   aux = codes;
 
   while (aux != NULL)
   {
     if(aux->Opcode == -1 && aux->isRelative1 == 1) // é space
     {
-        i = 0;
         for(i = 0; i < strtol(aux->Operator1,&dump,10); i++)
         {
-          fprintf(saida, "0 ");
+          fprintf(saida, "0");
+
+          if(aux->nextLine != NULL)
+            fprintf(saida, "%c", 0x20);
         }
     }
     else if(aux->Opcode == -1 && aux->isRelative1 == 0) // é const
     {
-      fprintf(saida, "%s ",aux->Operator1);
+      fprintf(saida, "%s",aux->Operator1);
+
+      if(aux->nextLine != NULL)
+        fprintf(saida, "%c", 0x20);
     }
     else
     {
@@ -139,14 +153,18 @@ void DoSecondPass(char* argv, objCode* codes, symbolTable* symbols, definitionTa
 
       if(aux->Opcode != -1)
       {
-        fprintf(saida, "%d ", aux->Opcode);
+        fprintf(saida, "%d", aux->Opcode);
+
+        if(aux->nextLine != NULL)
+          fprintf(saida, "%c", 0x20);
       }
 
       if(number != -1)
       {
         if(dump[0]=='\0')
         {
-          fprintf(saida, "%s ",aux->Operator1);
+          if(aux->Operator1[0] != '\0')
+            fprintf(saida, "%s ",aux->Operator1);
         }
         else
         {
@@ -211,7 +229,8 @@ void DoSecondPass(char* argv, objCode* codes, symbolTable* symbols, definitionTa
       {
         if(dump[0]=='\0')
         {
-          fprintf(saida, "%s ",aux->Operator2);
+          if(aux->Operator2[0] != '\0')
+            fprintf(saida, "%s ",aux->Operator2);
         }
         else
         {
@@ -267,7 +286,7 @@ int findSymbol(symbolTable *symbols, char* Label)
   {
     if(!strcmp(aux->Label, Label))
       return aux->Value;
-    
+
     aux = aux->nextItem;
   }
   return -1;
