@@ -33,9 +33,11 @@ void secondPass(char* argv, objCode* codes, symbolTable* symbols, definitionTabl
   int number=0, number2=0, i=0,j=0, k=0;
   int *printVector;
   objCode* aux;
- strcpy(line,argv);
+
+  strcpy(line,argv);
   saida = fopen( strcat(line,".obj"),"w");
-  if(isModule)//se é módulo
+
+  if(isModule) //se é módulo
   {
     symbolTable *aux3;
     aux3 = symbols;
@@ -65,14 +67,17 @@ void secondPass(char* argv, objCode* codes, symbolTable* symbols, definitionTabl
     definitionTable *aux4;
     aux4 = definitions;
     fprintf(saida,"TABLE DEFINITION\n");
+
     while(aux4 != NULL)
     {
       fprintf(saida,"%s %d\n", aux4->Label, aux4->Value);
       aux4 = aux4->nextItem;
     }
+
     aux = codes;
     i=0;
     fprintf(saida,"RELATIVE\n");
+
     while(aux!= NULL)
     {
       if(aux->isRelative1 == 1)
@@ -87,144 +92,179 @@ void secondPass(char* argv, objCode* codes, symbolTable* symbols, definitionTabl
     }
     fprintf(saida,"\nCODE\n");
   }
-    aux = codes;
-    while (aux != NULL)
+
+  aux = codes;
+
+  while (aux != NULL)
+  {
+    if(aux->Opcode == -1 && aux->isRelative1 == 1) // é space
     {
-      if(aux->Opcode == -1 && aux->isRelative1 == 1) // é space
+        i = 0;
+        for(i = 0; i < strtol(aux->Operator1,&dump,10); i++)
+        {
+          fprintf(saida, "0 ");
+        }
+    }
+    else if(aux->Opcode == -1 && aux->isRelative1 == 0) // é const
+    {
+      fprintf(saida, "%s ",aux->Operator1);
+    }
+    else
+    {
+      number = strtol(aux->Operator1,&dump,10);
+      if(strstr(dump, "+") != NULL)
       {
-          i = 0;
-          for(i = 0; i < strtol(aux->Operator1,&dump,10); i++)
-          {
-            fprintf(saida, "0 ");
-          }
-        }else if(aux->Opcode == -1 && aux->isRelative1 == 0) // é const
+        i=0;
+
+        do
+        {
+          label[i]=dump[i];
+          i++;
+        } while(dump[i] !='+');
+
+        label[i] = '\0';
+        i++;
+        j=i;
+
+        do
+        {
+          line[i-j]=dump[i];
+          i++;
+        } while(dump[i] !='\0');
+
+        number2 = strtol(line,&dump,10);
+        flag2 = 1;
+      }
+
+      if(aux->Opcode != -1)
+      {
+        fprintf(saida, "%d ", aux->Opcode);
+      }
+
+      if(number != -1)
+      {
+        if(dump[0]=='\0')
         {
           fprintf(saida, "%s ",aux->Operator1);
-        }else{
-        number = strtol(aux->Operator1,&dump,10);
-        if(strstr(dump, "+") != NULL)
-        {
-          i=0;
-          do
-          {
-            label[i]=dump[i];
-            i++;
-          }while(dump[i] !='+');
-          label[i] = '\0';
-          i++;
-          j=i;
-          do
-          {
-            line[i-j]=dump[i];
-            i++;
-          }while(dump[i] !='\0');
-          number2 = strtol(line,&dump,10);
-          flag2 = 1;
         }
-          if(aux->Opcode != -1)
+        else
+        {
+          if(flag2==0)
           {
-              fprintf(saida, "%d ", aux->Opcode);
-          }
-          if(number != -1)
-          {
-            if(dump[0]=='\0')
-            {
-              fprintf(saida, "%s ",aux->Operator1);
-            }else{
-              if(flag2==0)
-              {
-                flag = findSymbol(symbols, aux->Operator1);
-                if(flag >= 0)
-                {
-                  fprintf(saida, "%d ", flag);
-                }else
-                {
+            flag = findSymbol(symbols, aux->Operator1);
 
-                    printf("Erro Semantico - linha %d - Simbolo nao existente!", aux->LineCounter);
-                  }
-              }else if(flag2 == 1)
-              {
-                flag = findSymbol(symbols, label);
-                if(flag >= 0)
-                {
-                  fprintf(saida, "%d ", flag+number2);
-                }else
-                {
-                    printf("Erro Semantico - linha %d - Simbolo nao existente!", aux->LineCounter);
-                }
-              }
+            if(flag >= 0)
+            {
+              fprintf(saida, "%d ", flag);
+            }
+            else
+            {
+              printf("Erro Semantico - linha %d - Simbolo nao existente!", aux->LineCounter);
             }
           }
-          number = strtol(aux->Operator2,&dump,10);
-          flag2 = 0;
-          if(strstr(dump, "+") > 0)
+          else if(flag2 == 1)
           {
-            int j=0;
-            i=0;
-            do
+            flag = findSymbol(symbols, label);
+
+            if(flag >= 0)
             {
-              label[i]=dump[i];
-              i++;
-            }while(dump[i] !='+');
-            label[i] = '\0';
-            i++;
-            j=i;
-            do
-            {
-              line[i-j]=dump[i];
-              i++;
-            }while(dump[i] !='\0');
-            number2 = strtol(line,&dump,10);
-            flag2 = 2;
-          }
-            if(number != -1)
-            {
-              if(dump[0]=='\0')
-              {
-                fprintf(saida, "%s ",aux->Operator2);
-              }else{
-                if(flag2==0)
-                {
-                  flag = findSymbol(symbols, aux->Operator2);
-                  if(flag >= 0)
-                  {
-                    fprintf(saida, "%d ", flag);
-                  }else
-                  {
-                    flag = findDefinition(definitions, aux->Operator2);
-                    if(flag >= 0)
-                    {
-                      fprintf(saida, "%d ", flag);
-                    }else
-                    {
-                      printf("Erro  Semantico - linha %d - Simbolo nao existente!", aux->LineCounter);
-                    }
-                  }
-                }else if(flag2 == 2)
-                {
-                  flag = findSymbol(symbols, label);
-                  if(flag >= 0)
-                  {
-                    fprintf(saida, "%d ", flag+number2);
-                  }else
-                  {
-                      printf("Erro  Semantico - linha %d - Simbolo nao existente!", aux->LineCounter);
-                  }
-                }
-              }
+              fprintf(saida, "%d ", flag+number2);
             }
-        }
-        aux = aux->nextLine;
-        if(aux == NULL)
-        {
-          exit(1);
+            else
+            {
+              printf("Erro Semantico - linha %d - Simbolo nao existente!", aux->LineCounter);
+            }
+          }
         }
       }
+
+      number = strtol(aux->Operator2,&dump,10);
+      flag2 = 0;
+
+      if(strstr(dump, "+") > 0)
+      {
+        int j=0;
+        i=0;
+
+        do
+        {
+          label[i]=dump[i];
+          i++;
+        } while(dump[i] !='+');
+
+        label[i] = '\0';
+        i++;
+        j=i;
+
+        do
+        {
+          line[i-j]=dump[i];
+          i++;
+        } while(dump[i] !='\0');
+
+        number2 = strtol(line,&dump,10);
+        flag2 = 2;
+      }
+
+      if(number != -1)
+      {
+        if(dump[0]=='\0')
+        {
+          fprintf(saida, "%s ",aux->Operator2);
+        }
+        else
+        {
+          if(flag2==0)
+          {
+            flag = findSymbol(symbols, aux->Operator2);
+
+            if(flag >= 0)
+            {
+              fprintf(saida, "%d ", flag);
+            }
+            else
+            {
+              flag = findDefinition(definitions, aux->Operator2);
+
+              if(flag >= 0)
+              {
+                fprintf(saida, "%d ", flag);
+              }
+              else
+              {
+                printf("Erro  Semantico - linha %d - Simbolo nao existente!", aux->LineCounter);
+              }
+            }
+          }
+          else if(flag2 == 2)
+          {
+            flag = findSymbol(symbols, label);
+            if(flag >= 0)
+            {
+              fprintf(saida, "%d ", flag+number2);
+            }
+            else
+            {
+              printf("Erro  Semantico - linha %d - Simbolo nao existente!", aux->LineCounter);
+            }
+          }
+        }
+      }
+    }
+    aux = aux->nextLine;
+
+    if(aux == NULL)
+    {
+      exit(1);
+    }
+  }
+  fclose(saida);
 }
 
 int findSymbol(symbolTable *symbols, char* Label)
 {
   symbolTable *aux;
+
   aux = symbols;
   while(aux != NULL)
   {
@@ -240,6 +280,7 @@ int findSymbol(symbolTable *symbols, char* Label)
 int findDefinition(definitionTable *definitions, char* Label)
 {
   definitionTable *aux;
+
   aux = definitions;
   while(aux != NULL)
   {
@@ -265,41 +306,86 @@ char* locateError(objCode* codeList, objCode* code, symbolTable *symbols)
         printf("Erro Semantico - linha %d - Divisao por zero!\n", code->LineCounter);
       }
       break;
+
     case 5:
     case 6:
     case 7:
     case 8:
-    number = strtol(code->Operator2,&dump,10);
-    flag2 = 0;
-    if(strstr(dump, "+") > 0)
-    {
-      int j=0;
-      i=0;
-      do
+      number = strtol(code->Operator2,&dump,10);
+      flag2 = 0;
+
+      if(strstr(dump, "+") > 0)
       {
-        label[i]=dump[i];
+        int j=0;
+        i=0;
+
+        do
+        {
+          label[i]=dump[i];
+          i++;
+        } while(dump[i] !='+');
+
+        label[i] = '\0';
         i++;
-      }while(dump[i] !='+');
-      label[i] = '\0';
-      i++;
-      j=i;
-      do
+        j=i;
+
+        do
+        {
+          line[i-j]=dump[i];
+          i++;
+        } while(dump[i] !='\0');number = strtol(code->Operator2,&dump,10);
+
+        flag2 = 0;
+
+        if(strstr(dump, "+") > 0)
+        {
+          int j=0;
+          i=0;
+
+          do
+          {
+            label[i]=dump[i];
+            i++;
+          } while(dump[i] !='+');
+
+          label[i] = '\0';
+          i++;
+          j=i;
+
+          do
+          {
+            line[i-j]=dump[i];
+            i++;
+          } while(dump[i] !='\0');
+
+          number2 = strtol(line,&dump,10);
+          flag2 = 2;
+        }
+        flag = findSymbol(symbols, label);
+
+        if(flag >= 0)
+        {
+           if(!evaluateNum(flag+number2, codeList))
+           {
+             printf("Erro Semantico - linha %d - Jump para local nao permitido!\n", code->LineCounter);
+           }
+        }
+        break;
+
+        number2 = strtol(line,&dump,10);
+        flag2 = 2;
+      }
+
+      flag = findSymbol(symbols, label);
+
+      if(flag >= 0)
       {
-        line[i-j]=dump[i];
-        i++;
-      }while(dump[i] !='\0');
-      number2 = strtol(line,&dump,10);
-      flag2 = 2;
-    }
-    flag = findSymbol(symbols, label);
-    if(flag >= 0)
-    {
-       if(!evaluateNum(flag+number2, codeList))
-       {
-         printf("Erro Semantico - linha %d - Jump para local nao permitido!\n", code->LineCounter);
-       }
-    }
-    break;
+         if(!evaluateNum(flag+number2, codeList))
+         {
+           printf("Erro Semantico - linha %d - Jump para local nao permitido!\n", code->LineCounter);
+         }
+      }
+      break;
   }
 }
 
@@ -308,6 +394,7 @@ int evaluate(char* operator, symbolTable *symbols, objCode* codeList)
   int address = 0;
   objCode* code = codeList;
   address = findSymbol(symbols, operator); //acha o endereçonce
+
   if(address != -1)
   {
     while(code != NULL)
@@ -326,6 +413,7 @@ int evaluate(char* operator, symbolTable *symbols, objCode* codeList)
 int evaluateNum(int address, objCode* codeList)
 {
   objCode* code = codeList;
+
   while(code != NULL)
   {
     if(code->Operator1LocationCouter == address && code->Opcode == -1)
@@ -336,4 +424,4 @@ int evaluateNum(int address, objCode* codeList)
     code = code->nextLine;
   }
   return 1;
-  }
+}
