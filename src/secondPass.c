@@ -153,10 +153,7 @@ void DoSecondPass(char* argv, objCode* codes, symbolTable* symbols, definitionTa
 
       if(aux->Opcode != -1)
       {
-        fprintf(saida, "%d", aux->Opcode);
-
-        if(aux->nextLine != NULL)
-          fprintf(saida, "%c", 0x20);
+        fprintf(saida, "%d ", aux->Opcode);
       }
 
       if(number != -1)
