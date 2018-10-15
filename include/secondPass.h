@@ -1,6 +1,6 @@
 
 
-void secondPass(char*, objCode* , symbolTable* , definitionTable*, int);
+void DoSecondPass(char*, objCode* , symbolTable* , definitionTable*, int);
 int findSymbol(symbolTable*, char*);
 int findDefinition(definitionTable*, char*);
 int evaluateNum(int, objCode*);

@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
     asmFile = DoPreProcess(argv);
     objCodeHead = DoFirstPass(asmFile, &symbolTableHead, &definitionTableHead, &isModule);
     DeletePreProcess(&asmFile);
-    secondPass(argv[1], objCodeHead, symbolTableHead, definitionTableHead, isModule);
+    DoSecondPass(argv[1], objCodeHead, symbolTableHead, definitionTableHead, isModule);
 
     DeleteObjCode(&objCodeHead);
     DeleteSymbolTabel(&symbolTableHead);

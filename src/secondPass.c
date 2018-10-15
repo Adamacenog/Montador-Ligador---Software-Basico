@@ -26,7 +26,7 @@
     #include "secondPass.h"
 #endif
 
-void secondPass(char* argv, objCode* codes, symbolTable* symbols, definitionTable* definitions, int isModule)
+void DoSecondPass(char* argv, objCode* codes, symbolTable* symbols, definitionTable* definitions, int isModule)
 {
   FILE  *saida;
   char line[500], lineOld[500], instruction[50], *dump, flag2=0, flag=0, label[50];
@@ -252,12 +252,8 @@ void secondPass(char* argv, objCode* codes, symbolTable* symbols, definitionTabl
       }
     }
     aux = aux->nextLine;
-
-    if(aux == NULL)
-    {
-      exit(1);
-    }
   }
+
   fclose(saida);
 }
 
