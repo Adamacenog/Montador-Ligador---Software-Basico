@@ -52,11 +52,11 @@ void DoSecondPass(char* argv, objCode* codes, symbolTable* symbols, definitionTa
         {
           if(strstr(aux->Operator1,aux3->Label)!= NULL)
           {
-            fprintf(saida,"%s  %d\n", aux3->Label, aux->Operator1LocationCouter);
+            fprintf(saida,"%s %d\n", aux3->Label, aux->Operator1LocationCouter);
           }
           if(strstr(aux->Operator2,aux3->Label)!= NULL)
           {
-            fprintf(saida,"%s  %d\n", aux3->Label, aux->Operator2LocationCouter);
+            fprintf(saida,"%s %d\n", aux3->Label, aux->Operator2LocationCouter);
           }
           aux = aux->nextLine;
         }
@@ -84,9 +84,10 @@ void DoSecondPass(char* argv, objCode* codes, symbolTable* symbols, definitionTa
       {
         fprintf(saida, "%d ", aux->Operator1LocationCouter);
       }
-        if(aux->isRelative2 == 1 )
-        {
-          fprintf(saida, "%d ", aux->Operator2LocationCouter);
+
+      if(aux->isRelative2 == 1 )
+      {
+        fprintf(saida, "%d ", aux->Operator2LocationCouter);
       }
       aux = aux->nextLine;
     }
@@ -265,9 +266,8 @@ int findSymbol(symbolTable *symbols, char* Label)
   while(aux != NULL)
   {
     if(!strcmp(aux->Label, Label))
-    {
       return aux->Value;
-    }
+    
     aux = aux->nextItem;
   }
   return -1;
@@ -281,9 +281,8 @@ int findDefinition(definitionTable *definitions, char* Label)
   while(aux != NULL)
   {
     if(!strcmp(aux->Label, Label))
-    {
       return aux->Value;
-    }
+
     aux = aux->nextItem;
   }
   return -1;
@@ -291,8 +290,8 @@ int findDefinition(definitionTable *definitions, char* Label)
 
 char* locateError(objCode* codeList, objCode* code, symbolTable *symbols)
 {
-  int number=0,number2=0, i=0, j=0;
-  char flag=0, flag2=0, label[100],*dump, line[100];
+  int number=0, number2=0, i=0, j=0;
+  char flag=0, flag2=0, label[100], *dump, line[100];
 
   switch(code->Opcode)
   {
@@ -396,10 +395,8 @@ int evaluate(char* operator, symbolTable *symbols, objCode* codeList)
     while(code != NULL)
     {
       if(code->Operator1LocationCouter == address && code->Opcode == -1 && code->isRelative1 == 0 && code->Operator1[0] == '0')
-      {
         return 0;
-        break;
-      }
+
       code = code->nextLine;
     }
     return 1;
@@ -413,10 +410,8 @@ int evaluateNum(int address, objCode* codeList)
   while(code != NULL)
   {
     if(code->Operator1LocationCouter == address && code->Opcode == -1)
-    {
       return 0;
-      break;
-    }
+
     code = code->nextLine;
   }
   return 1;
