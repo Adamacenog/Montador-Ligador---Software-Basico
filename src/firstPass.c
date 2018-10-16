@@ -101,7 +101,8 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
             if(isEndOfLine)
             {
               Operator1LocationCouter = locationCounter -1;
-              isRelative1 = 1;
+              isRelative1 = 0;
+              Opcode = 0;
             }
 
             break;
@@ -146,7 +147,8 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
       if(directiveValue == 2 && isEndOfLine && Operator1[0] == '\0')
       {
           Operator1LocationCouter = locationCounter -1;
-          isRelative1 = 1;
+          isRelative1 = 0;
+          Opcode = 0;
           Operator1[0] = 0x31;
           argummentsN = 0;
       }
@@ -160,7 +162,7 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
         wasEnd = 0;
 
       // Executa o opcode encontrado no ultimo item
-      if(Opcode != -1)
+      if(Opcode != -1 && Opcode != 0)
       {
         switch (Opcode)
         {

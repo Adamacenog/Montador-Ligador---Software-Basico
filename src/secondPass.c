@@ -107,7 +107,7 @@ void DoSecondPass(char* argv, objCode* codes, symbolTable* symbols, definitionTa
 
   while (aux != NULL)
   {
-    if(aux->Opcode == -1 && aux->isRelative1 == 1) // é space
+    if(aux->Opcode == 0 && aux->isRelative1 == 0) // é space
     {
         for(i = 0; i < strtol(aux->Operator1,&dump,10); i++)
         {
