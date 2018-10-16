@@ -316,10 +316,37 @@ void locateError(objCode* codeList, objCode* code, symbolTable *symbols, constTa
   switch(code->Opcode)
   {
     case 4://divisão por zero
-      if(code->Operator2 == 0 || evaluate( code->Operator2, symbols, codeList) == 0)
+    if(strstr(code->Operator2, "+") != NULL)
+    {
+      number = strtol(code->Operator2,&dump,10);
+      do
+      {
+        label[i]=dump[i];
+        i++;
+      } while(dump[i] !='+');
+
+      label[i] = '\0';
+      i++;
+      j=i;
+
+      do
+      {
+        line[i-j]=dump[i];
+        i++;
+      } while(dump[i] !='\0');
+
+      number2 = strtol(line,&dump,10);
+      if(!evaluateNum(findSymbol(symbols,label)+number2, codeList))
       {
         printf("Erro semântico na linha: %d.\n", code->LineCounter);
       }
+    }else
+    {
+      if(code->Operator2[0] == '0' || !evaluate( code->Operator2, symbols, codeList))
+      {
+        printf("Erro semântico na linha: %d.\n", code->LineCounter);
+      }
+    }
       break;
 
     case 5:
@@ -329,7 +356,7 @@ void locateError(objCode* codeList, objCode* code, symbolTable *symbols, constTa
       number = strtol(code->Operator2,&dump,10);
       flag2 = 0;
 
-      if(strstr(dump, "+") > 0)
+      if(strstr(dump, "+") != NULL)
       {
         int j=0;
         i=0;
@@ -380,25 +407,28 @@ void locateError(objCode* codeList, objCode* code, symbolTable *symbols, constTa
 
         if(flag >= 0)
         {
-           if(!evaluateNum(flag+number2, codeList))
+           if(!findIlegalJumpNum(flag+number2, codeList))
+           {
+             printf("Erro semântico na linha: %d.\n", code->LineCounter);
+             break;
+           }
+        }
+      }else
+      {
+        flag = findSymbol(symbols, code->Operator1);
+        if(flag >= 0)
+        {
+           if(!findIlegalJump(code->Operator1, symbols, codeList))
            {
              printf("Erro semântico na linha: %d.\n", code->LineCounter);
            }
+        }else
+        {
+          if(!findIlegalJumpNum(strtol(code->Operator1, &dump,10), codeList))
+          {
+            printf("Erro semântico na linha: %d.\n", code->LineCounter);
+          }
         }
-        break;
-
-        number2 = strtol(line,&dump,10);
-        flag2 = 2;
-      }
-
-      flag = findSymbol(symbols, label);
-
-      if(flag >= 0)
-      {
-         if(!evaluateNum(flag+number2, codeList))
-         {
-           printf("Erro semântico na linha: %d.\n", code->LineCounter);
-         }
       }
       break;
       case 11://alterar const
@@ -424,7 +454,7 @@ int evaluate(char* operator, symbolTable *symbols, objCode* codeList)
   {
     while(code != NULL)
     {
-      if(code->Operator1LocationCouter == address && code->Opcode == -1 && code->isRelative1 == 0 && code->Operator1[0] == '0')
+      if(code->Operator1LocationCouter == address && code->Opcode == -1 && code->Operator1[0] == '0')
         return 0;
 
       code = code->nextLine;
@@ -483,4 +513,37 @@ void deleteConstTable(constTable* table)
     free(aux);
     aux = aux2;
   }
+}
+
+char findIlegalJump(char* operator, symbolTable *symbols, objCode* codeList)
+{
+  int address = 0;
+  objCode* code = codeList;
+  address = findSymbol(symbols, operator); //acha o endereçonce
+
+  if(address != -1)
+  {
+    while(code != NULL)
+    {
+      if(code->Operator1LocationCouter == address && (code->Opcode == -1 || code->Opcode == 0))
+        return 0;
+
+      code = code->nextLine;
+    }
+    return 1;
+  }
+}
+
+char findIlegalJumpNum(int address, objCode* codeList)
+{
+  objCode* code = codeList;
+
+  while(code != NULL)
+  {
+    if(code->Operator1LocationCouter == address && (code->Opcode == -1 || code->Opcode == 0))
+      return 0;
+
+    code = code->nextLine;
+  }
+  return 1;
 }

@@ -12,3 +12,5 @@ int evaluate(char*, symbolTable*, objCode*);
 void locateError(objCode*, objCode*, symbolTable*, constTable*);
 constTable* addConstTable(objCode*);
 void deleteConstTable(constTable*);
+char findIlegalJump(char* operator, symbolTable *symbols, objCode* codeList);
+char findIlegalJumpNum(int address, objCode* codeList);
