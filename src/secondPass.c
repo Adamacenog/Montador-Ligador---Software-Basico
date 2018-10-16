@@ -33,7 +33,9 @@ void DoSecondPass(char* argv, objCode* codes, symbolTable* symbols, definitionTa
   int number=0, number2=0, i=0,j=0, k=0;
   int *printVector;
   objCode* aux;
+  constTable *constList;
 
+  constList = addConstTable(codes);
   strcpy(line,argv);
   saida = fopen( strcat(line,".obj"),"w");
 
@@ -107,6 +109,7 @@ void DoSecondPass(char* argv, objCode* codes, symbolTable* symbols, definitionTa
 
   while (aux != NULL)
   {
+    locateError(codes, aux, symbols, constList);
     if(aux->Opcode == 0 && aux->isRelative1 == 0) // é space
     {
         for(i = 0; i < strtol(aux->Operator1,&dump,10); i++)
@@ -270,18 +273,18 @@ void DoSecondPass(char* argv, objCode* codes, symbolTable* symbols, definitionTa
     }
     aux = aux->nextLine;
   }
-
+  deleteConstTable(constList);
   fclose(saida);
 }
 
-int findSymbol(symbolTable *symbols, char* Label)
+int findSymbol(symbolTable *symbols, char* Lable)
 {
   symbolTable *aux;
 
   aux = symbols;
   while(aux != NULL)
   {
-    if(!strcmp(aux->Label, Label))
+    if(!strcmp(aux->Label, Lable))
       return aux->Value;
 
     aux = aux->nextItem;
@@ -289,14 +292,14 @@ int findSymbol(symbolTable *symbols, char* Label)
   return -1;
 }
 
-int findDefinition(definitionTable *definitions, char* Label)
+int findDefinition(definitionTable *definitions, char* Lable)
 {
   definitionTable *aux;
 
   aux = definitions;
   while(aux != NULL)
   {
-    if(!strcmp(aux->Label, Label))
+    if(!strcmp(aux->Label, Lable))
       return aux->Value;
 
     aux = aux->nextItem;
@@ -304,14 +307,15 @@ int findDefinition(definitionTable *definitions, char* Label)
   return -1;
 }
 
-char* locateError(objCode* codeList, objCode* code, symbolTable *symbols)
+void locateError(objCode* codeList, objCode* code, symbolTable *symbols, constTable *constList)
 {
   int number=0, number2=0, i=0, j=0;
   char flag=0, flag2=0, label[100], *dump, line[100];
+  constTable *constAux = constList;
 
   switch(code->Opcode)
   {
-    case 4:
+    case 4://divisão por zero
       if(code->Operator2 == 0 || evaluate( code->Operator2, symbols, codeList) == 0)
       {
         printf("Erro semântico na linha: %d.\n", code->LineCounter);
@@ -321,7 +325,7 @@ char* locateError(objCode* codeList, objCode* code, symbolTable *symbols)
     case 5:
     case 6:
     case 7:
-    case 8:
+    case 8://erros em jumps
       number = strtol(code->Operator2,&dump,10);
       flag2 = 0;
 
@@ -397,6 +401,16 @@ char* locateError(objCode* codeList, objCode* code, symbolTable *symbols)
          }
       }
       break;
+      case 11://alterar const
+        while(constAux != NULL)
+        {
+          if(constAux->value == findSymbol(symbols,code->Operator1))
+          {
+            printf("Erro semântico na linha: %d.\n", code->LineCounter);
+          }
+          constAux = constAux->nextItem;
+        }
+        break;
   }
 }
 
@@ -431,4 +445,42 @@ int evaluateNum(int address, objCode* codeList)
     code = code->nextLine;
   }
   return 1;
+}
+
+constTable* addConstTable(objCode* codes)
+{
+  objCode *aux = codes;
+  constTable *previous = NULL, *next = NULL, *head;
+  while(aux != NULL)
+  {
+    if(aux->Opcode == -1 && aux->isRelative1 == 0)//é const
+    {
+      next = (constTable*) malloc(sizeof(constTable));
+      next->value = aux->Operator1LocationCouter;
+      next->nextItem = NULL;
+      if(previous == NULL)
+      {
+        previous = next;
+        head = previous;
+      }else
+      {
+        previous->nextItem = next;
+        previous = next;
+      }
+    }
+    aux = aux->nextLine;
+  }
+  return previous;
+}
+void deleteConstTable(constTable* table)
+{
+  constTable *aux, *aux2;
+  aux = table;
+  while(aux != NULL)
+  {
+    aux2 = aux->nextItem;
+    if(aux!=NULL)
+    free(aux);
+    aux = aux2;
+  }
 }
