@@ -110,7 +110,10 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
           case 3: // Const
             if(item[0] >= 0x30 && item[0] <= 0x39 || item[0] == 0x2D && item[1] >= 0x30 && item[1] <= 0x39 || item[0] == 0x2D && item[1] == '\0')
             {
-              needEndOfLine = 1;
+              // Se não for apenas um '-'
+              if(item[0] != 0x2D || item[1] != '\0')
+                needEndOfLine = 1;
+
               argummentsN = 0;
               Operator1LocationCouter = locationCounter -1;
               ConvertFromHexToDecimal(item, preProcessHead->LineCounter); // Converte o hexadecimal para decimal (se for hexadecimal)
@@ -152,6 +155,10 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
           Operator1[0] = 0x31;
           argummentsN = 0;
       }
+
+      // Se foi CONST, botaram apenas um '-' e nenhum numero em sequencia, erro!
+      if(directiveValue == 3 && isEndOfLine && strcmp(Operator1, "-") == 0)
+        printf("Erro sintático na linha: %d.\n", preProcessHead->LineCounter);
 
       // Seta que houve um Begin
       if(directiveValue == 6)
