@@ -94,6 +94,7 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
             Operator1LocationCouter = locationCounter -1;
             isRelative1 = 0;
             Opcode = 0;
+            needEndOfLine = 1;
 
             if(strcmp(ptr, "") != 0 || number <= 0)
               printf("Erro sintático na linha: %d.\n", preProcessHead->LineCounter);
