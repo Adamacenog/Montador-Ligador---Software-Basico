@@ -31,10 +31,10 @@ Jônatas Senna - mat.
 objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead, definitionTable **definitionTableHead, int *isModule)
 {
   objCode *objCodeHead = NULL;
-  char item[51], Operator1[51], Operator2[51], label[51];
+  char item[51], Operator1[51], Operator2[51], label[51], *ptr;
   // Section = -1: indefinido,  1 - TEXT, 2 - DATA, 3 - BSS
   int locationCounter = 0, section = -1, isEndOfLine = 0, directiveValue = 0, argummentsN = 0, needEndOfLine = 0, wasEnd = 0, wasText = 0, wasLabel = 0, wasStop = 0;
-  int Opcode = -1, OpcodeLocationCouter = -1, Operator1LocationCouter = -1, isRelative1 = -1, Operator2LocationCouter = -1, isRelative2 = -1;
+  int Opcode = -1, OpcodeLocationCouter = -1, Operator1LocationCouter = -1, isRelative1 = -1, Operator2LocationCouter = -1, isRelative2 = -1, number;
 
   // Limpa os dados do Operator1 e Operator2
   ClearString(Operator1, 51);
@@ -88,22 +88,15 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
             break;
 
           case 2: // Space
-
+            number = (int)strtol(item, &ptr, 0);
             strcat(Operator1, item);
-            argummentsN -= 1; // Foi add um argumento
+            argummentsN = 0; // Foi add um argumento
+            Operator1LocationCouter = locationCounter -1;
+            isRelative1 = 0;
+            Opcode = 0;
 
-            if(item[0] == '+' && item[1] != '\0' || StringContainsAtEnd(item, '+', 51))
-              argummentsN += 1; // Caso tenha uma soma junto a algum operando, tem que somar 1 (pois serão só 2 itens)
-
-            if(item[0] == '+' && item[1] == '\0')
-              argummentsN += 2; // Caso tenha uma soma sozinha, tem que adicionar 2 (pois tera um argumento na esquerda e um na direita)
-
-            if(isEndOfLine)
-            {
-              Operator1LocationCouter = locationCounter -1;
-              isRelative1 = 0;
-              Opcode = 0;
-            }
+            if(strcmp(ptr, "") != 0 || number <= 0)
+              printf("Erro sintático na linha: %d.\n", preProcessHead->LineCounter);
 
             break;
 
