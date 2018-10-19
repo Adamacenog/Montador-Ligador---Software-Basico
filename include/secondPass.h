@@ -14,3 +14,5 @@ constTable* addConstTable(objCode*);
 void deleteConstTable(constTable*);
 char findIlegalJump(char* operator, symbolTable *symbols, objCode* codeList);
 char findIlegalJumpNum(int address, objCode* codeList);
+int isSpace(char*, symbolTable *, objCode*);
+int isSpaceNum(int , objCode*);
