@@ -548,15 +548,27 @@ int isSpaceNum(int address, objCode* codeList)
 int isSymbolExtern(symbolTable *symbols, char* Lable)
 {
   symbolTable *aux;
+  char backupLabel[51], *ptr;
+  int number;
+
+  CopyString(Lable, backupLabel, 51);
+  if(StringContains(Lable, '+', 51))
+    GetLabelFromSum(Lable, 51);
 
   aux = symbols;
   while(aux != NULL)
   {
     if(!strcmp(aux->Label, Lable) && aux->isExtern)
+    {
+      CopyString(backupLabel, Lable, 51);
       return 1;
+    }
 
     aux = aux->nextItem;
   }
+
+  CopyString(backupLabel, Lable, 51);
+
   return 0;
 }
 

@@ -88,7 +88,7 @@ objCode * DoFirstPass(preProcess *preProcessHead, symbolTable **symbolTableHead,
             break;
 
           case 2: // Space
-            number = (int)strtol(item, &ptr, 0);
+            number = (int)strtol(item, &ptr, 10);
             strcat(Operator1, item);
             argummentsN = 0; // Foi add um argumento
             Operator1LocationCouter = locationCounter -1;

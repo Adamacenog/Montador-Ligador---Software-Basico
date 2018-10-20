@@ -100,3 +100,29 @@ int StringCompareButEnd(char *item1, char *item2, int size1, int size2)
 
   return 1;
 }
+
+// Pega a label de uma soma
+void GetLabelFromSum(char *item, int size)
+{
+  char newItem[51], *ptr;
+  int number, i;
+
+  for(i = 0; i < size; i++)
+  {
+    if(item[i] == '+')
+    {
+      newItem[i] = '\0';
+      break;
+    }
+
+    newItem[i] = item[i];
+  }
+
+  CopyString(newItem, item, 51);
+}
+
+void CopyString(char *source, char *dest, int size)
+{
+  for(int i=0; i<=size; i++)
+    dest[i] = source[i];
+}
