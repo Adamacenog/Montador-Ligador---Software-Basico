@@ -52,7 +52,7 @@ int main(int argc, char** argv)
       fscanf(object, "%c",&auxChar[0]);
   if(auxChar[0]<58 && auxChar[0]>47 )
   {
-    while(!feof(object) || auxChar[0]=='\n')
+    while(!feof(object) && auxChar[0]!='\n' && auxChar[0]!='\r')
     {
       fprintf(output, "%c", auxChar[0]);
       fscanf(object, "%c",&auxChar[0]);
