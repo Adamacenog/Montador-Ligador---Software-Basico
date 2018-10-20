@@ -52,7 +52,7 @@ int main(int argc, char** argv)
       fscanf(object, "%c",&auxChar[0]);
   if(auxChar[0]<58 && auxChar[0]>47 )
   {
-    while(!feof(object) || auxChar[0]=='\n')
+    while(!feof(object) && auxChar[0]!='\n')
     {
       fprintf(output, "%c", auxChar[0]);
       fscanf(object, "%c",&auxChar[0]);
@@ -139,15 +139,22 @@ int main(int argc, char** argv)
           while(!feof(object))
           {
             fscanf(object, "%s",auxChar);
-            number = strtol(auxChar,&dump, 10);
-            if(code==NULL)
+            if(strcmp(auxChar, "\n") != 0)
             {
-              code = addCodeObj(code, number, offsetAux[i-1]+offset);
-            }else
-            {
-              addCodeObj(code, number, offsetAux[i-1]+offset);
+              number = strtol(auxChar,&dump, 10);
+              if(code==NULL)
+              {
+                code = addCodeObj(code, number, offsetAux[i-1]+offset);
+              }else
+              {
+                addCodeObj(code, number, offsetAux[i-1]+offset);
+              }
+              offset++;
             }
-            offset++;
+            else
+            {
+              break;
+            }
           }
           offsetAux[i] = offset+offsetAux[i-1];
           break;
