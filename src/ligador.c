@@ -25,162 +25,177 @@ int main(int argc, char** argv)
   definitionTable *definition=NULL;
   useTable *use=NULL;
   relativeTable *relative=NULL;
-
-  offsetAux[0] = 0;
-  strcpy(aux, argv[1]);
-  size = strlen(aux);
-  aux[size] = '.';
-  aux[size+1] = 'e';
-  aux[size+2] = '\0';
-  output = fopen(aux, "w");
-  i = 1;
-  while(i<argc)
+  if(argc > 1 )
   {
-    strcpy(aux,argv[i]);
+    offsetAux[0] = 0;
+    strcpy(aux, argv[1]);
     size = strlen(aux);
     aux[size] = '.';
-    aux[size+1] = 'o';
-    aux[size+2] = 'b';
-    aux[size+3] = 'j';
-    aux[size+4] = '\0';
-    object=fopen(aux, "r");
-    fscanf(object, "%c",&auxChar[0]);
-if(auxChar[0]<58 && auxChar[0]>47 )
-{
-  while(!feof(object) || auxChar[0]=='\n')
-  {
-    fprintf(output, "%c", auxChar[0]);
-    fscanf(object, "%c",&auxChar[0]);
-  }
-}else
-{
-    rewind(object);
-    fscanf(object, "%s",auxChar);
-    while(1)
+    aux[size+1] = 'e';
+    aux[size+2] = '\0';
+    output = fopen(aux, "w");
+    i = 1;
+    while(i<argc)
     {
-      if(!strcmp(auxChar,"TABLE") )
+      strcpy(aux,argv[i]);
+      size = strlen(aux);
+      aux[size] = '.';
+      aux[size+1] = 'o';
+      aux[size+2] = 'b';
+      aux[size+3] = 'j';
+      aux[size+4] = '\0';
+      object=fopen(aux, "r");
+      if(object == NULL)
       {
-        fscanf(object, "%s",auxChar);
-        if(!strcmp(auxChar,"USE"))
-        {
-          flag=0;
-          while(!(!strcmp(auxChar,"TABLE")))
-          {
-            if(flag==0)
-            {
-              fscanf(object, "%s",auxChar);
-            }
-            strcpy(lable, auxChar);
-            fscanf(object, "%s",auxChar);
-            number = strtol(auxChar,&dump, 10);
-            if(use == NULL)
-            {
-              use = addUse(use, lable, number+offsetAux[i-1]);
-            }else
-            {
-              addUse(use, lable, number+offsetAux[i-1]);
-            }
-            fscanf(object, "%s",auxChar);
-            flag=1;
-
-          }
-        }else if(!strcmp(auxChar,"DEFINITION"))
-        {
-          flag=0;
-          while(!(!strcmp(auxChar,"RELATIVE")))
-          {
-            if(flag==0)
-            {
-              fscanf(object, "%s",auxChar);
-            }
-            strcpy(lable, auxChar);
-            fscanf(object, "%s",auxChar);
-            number = strtol(auxChar,&dump, 10);
-            if(definition==NULL)
-            {
-              definition=addDefinition(definition, lable, number+offsetAux[i-1]);
-            }else
-            {
-              addDefinition(definition, lable, number+offsetAux[i-1]);
-            }
-            fscanf(object, "%s",auxChar);
-            flag=1;
-          }
-        }
-      }else if(!strcmp(auxChar,"RELATIVE"))
-      {
-        flag=0;
-        while(!(!strcmp(auxChar,"CODE")))
-        {
-          if(flag==0)
-          {
-            fscanf(object, "%s",auxChar);
-          }
-          number = strtol(auxChar,&dump, 10);
-          if(relative==NULL)
-          {
-            relative = addRelative(relative, number+offsetAux[i-1]);
-          }else
-          {
-             addRelative(relative, number+offsetAux[i-1]);
-          }
-          fscanf(object, "%s",auxChar);
-          flag=1;
-
-        }
-      }else if(!strcmp(auxChar,"CODE"))
-      {
-        offset=0;
-        while(!feof(object))
-        {
-          fscanf(object, "%s",auxChar);
-          number = strtol(auxChar,&dump, 10);
-          if(code==NULL)
-          {
-            code = addCodeObj(code, number, offsetAux[i-1]+offset);
-          }else
-          {
-            addCodeObj(code, number, offsetAux[i-1]+offset);
-          }
-          offset++;
-        }
-        offsetAux[i] = offset;
-        break;
+        printf("Arqivo Invalido\n");
       }
-}
-
-}
-    fclose(object);
-    i++;
-  }
-  makeRelative(code, relative, offsetAux);
-  swapDefInUse(use, definition, code);
-  printEx(code, output);
-  fclose(output);
-  dropCodeObj(code);
-  dropUse(use);
-  dropRelative(relative);
-  dropDefinition(definition);
-  return 0;
-}
-
-codeTable* addCodeObj(codeTable* tab, int value, int address)
-{
-  codeTable *aux;
-  aux = malloc(sizeof(codeTable));
-  aux->nextItem = NULL;
-  aux->Value= value;
-  aux->address=address;
-  if(tab==NULL)
+      fscanf(object, "%c",&auxChar[0]);
+  if(auxChar[0]<58 && auxChar[0]>47 )
   {
-    return aux;
+    while(!feof(object) || auxChar[0]=='\n')
+    {
+      fprintf(output, "%c", auxChar[0]);
+      fscanf(object, "%c",&auxChar[0]);
+    }
   }else
   {
-      while(tab->nextItem!=NULL)
+      rewind(object);
+      fscanf(object, "%s",auxChar);
+      while(1)
       {
-        tab=tab->nextItem;
-      }
-      tab->nextItem = aux;
+        if(!strcmp(auxChar,"TABLE") )
+        {
+          fscanf(object, "%s",auxChar);
+          if(!strcmp(auxChar,"USE"))
+          {
+            flag=0;
+            while(!(!strcmp(auxChar,"TABLE")))
+            {
+              if(flag==0)
+              {
+                fscanf(object, "%s",auxChar);
+              }
+              strcpy(lable, auxChar);
+              fscanf(object, "%s",auxChar);
+              number = strtol(auxChar,&dump, 10);
+              if(use == NULL)
+              {
+                use = addUse(use, lable, number+offsetAux[i-1]);
+              }else
+              {
+                addUse(use, lable, number+offsetAux[i-1]);
+              }
+              fscanf(object, "%s",auxChar);
+              flag=1;
+
+            }
+          }else if(!strcmp(auxChar,"DEFINITION"))
+          {
+            flag=0;
+            while(!(!strcmp(auxChar,"RELATIVE")))
+            {
+              if(flag==0)
+              {
+                fscanf(object, "%s",auxChar);
+              }
+              strcpy(lable, auxChar);
+              fscanf(object, "%s",auxChar);
+              number = strtol(auxChar,&dump, 10);
+              if(definition==NULL)
+              {
+                definition=addDefinition(definition, lable, number+offsetAux[i-1]);
+              }else
+              {
+                addDefinition(definition, lable, number+offsetAux[i-1]);
+              }
+              fscanf(object, "%s",auxChar);
+              flag=1;
+            }
+          }
+        }else if(!strcmp(auxChar,"RELATIVE"))
+        {
+          flag=0;
+          while(!(!strcmp(auxChar,"CODE")))
+          {
+            if(flag==0)
+            {
+              fscanf(object, "%s",auxChar);
+            }
+            number = strtol(auxChar,&dump, 10);
+            if(relative==NULL)
+            {
+              relative = addRelative(relative, number+offsetAux[i-1]);
+            }else
+            {
+               addRelative(relative, number+offsetAux[i-1]);
+            }
+            fscanf(object, "%s",auxChar);
+            flag=1;
+
+          }
+        }else if(!strcmp(auxChar,"CODE"))
+        {
+          offset=0;
+          while(!feof(object))
+          {
+            fscanf(object, "%s",auxChar);
+            number = strtol(auxChar,&dump, 10);
+            if(code==NULL)
+            {
+              code = addCodeObj(code, number, offsetAux[i-1]+offset);
+            }else
+            {
+              addCodeObj(code, number, offsetAux[i-1]+offset);
+            }
+            offset++;
+          }
+          offsetAux[i] = offset+offsetAux[i-1];
+          break;
+        }
+  }
+
+  }
+      fclose(object);
+      i++;
+    }
+    makeRelative(code, relative, offsetAux);
+    flag = swapDefInUse(use, definition, code);
+    if(flag ==0)
+    {
+        fclose(output);
+        dropCodeObj(code);
+        dropUse(use);
+        dropRelative(relative);
+        dropDefinition(definition);
+        exit(1);
+    }
+    printEx(code, output);
+    fclose(output);
+    dropCodeObj(code);
+    dropUse(use);
+    dropRelative(relative);
+    dropDefinition(definition);
+  }
+    return 0;
+  }
+
+  codeTable* addCodeObj(codeTable* tab, int value, int address)
+  {
+    codeTable *aux;
+    aux = malloc(sizeof(codeTable));
+    aux->nextItem = NULL;
+    aux->Value= value;
+    aux->address=address;
+    if(tab==NULL)
+    {
+      return aux;
+    }else
+    {
+        while(tab->nextItem!=NULL)
+        {
+          tab=tab->nextItem;
+        }
+        tab->nextItem = aux;
   }
 };
 definitionTable* addDefinition(definitionTable* tab, char* lable, int address)
@@ -279,25 +294,38 @@ void dropRelative(relativeTable*tab)
     tab=aux;
   }
 };
-void swapDefInUse(useTable* use, definitionTable* definition, codeTable* code)
+int swapDefInUse(useTable* use, definitionTable* definition, codeTable* code)
 {
   definitionTable *aux = definition;
   codeTable *auxCode = code;
+  int flag = 0;
   while(use != NULL)
   {
+    flag = 0;
     aux=definition;
-    while(strcmp(use->lable, aux->lable))
+    while(aux != NULL && strcmp(use->lable, aux->lable))
     {
       aux=aux->nextItem; //acha a lable utilizada na tabela de definições
+    }
+    if(aux!=NULL)
+    {
+      flag=1;
     }
     auxCode=code;
     while(auxCode->address != use->address)
     {
       auxCode = auxCode->nextItem; //acha o endereço de use na tabla code
     }
-    auxCode->Value = aux->address; // substitui o valor pelo valor do endereço na tabela definition
+    if(flag==1)
+    {
+      auxCode->Value = aux->address; // substitui o valor pelo valor do endereço na tabela definition
+    }else
+    {
+      return 0;
+    }
     use=use->nextItem;//para todos os uses
   }
+  return 1;
 };
 void makeRelative(codeTable* code, relativeTable* relative, int* offset)
 {
@@ -311,9 +339,10 @@ void makeRelative(codeTable* code, relativeTable* relative, int* offset)
     }
     for(i=0;i<4;i++) // descobre qual é o offset
     {
-      if(auxCode->address>offset[i] && auxCode->address<offset[i+1])
+      if(auxCode->address>=offset[i] && auxCode->address<offset[i+1])
       {
         auxCode->Value += offset[i]; //seta o offset
+        break;
       }
     }
     relative = relative->nextItem;//para todo relative
@@ -322,9 +351,14 @@ void makeRelative(codeTable* code, relativeTable* relative, int* offset)
 
 void printEx(codeTable* tab, FILE* output)
 {
+  int i = 0;
   while(tab!= NULL)
   {
-    fprintf(output, "%d ", tab->Value);
+    if(tab->address == i)
+    {
+      fprintf(output, "%d ", tab->Value);
+      i++;
+    }
     tab=tab->nextItem;
   }
 };

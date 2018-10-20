@@ -42,6 +42,6 @@ void dropCodeObj(codeTable* tab);
 void dropDefinition(definitionTable* tab);
 void dropUse(useTable* tab);
 void dropRelative(relativeTable*tab);
-void swapDefInUse(useTable* use, definitionTable* definition, codeTable* code);
+int swapDefInUse(useTable* use, definitionTable* definition, codeTable* code);
 void makeRelative(codeTable* code, relativeTable* relative, int* offset);
 void printEx(codeTable* tab, FILE* output);
