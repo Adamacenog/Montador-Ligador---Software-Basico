@@ -153,8 +153,8 @@ if(auxChar[0]<58 && auxChar[0]>47 )
     fclose(object);
     i++;
   }
+  makeRelative(code, relative, offsetAux);
   swapDefInUse(use, definition, code);
-  //makeRelative(code, relative, offsetAux);
   printEx(code, output);
   fclose(output);
   dropCodeObj(code);
