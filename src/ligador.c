@@ -18,13 +18,15 @@ Jônatas Senna - mat. 14/0090983
 
 int main(int argc, char** argv)
 {
-  int i=0, offset=0, k =0, number=0, offsetAux[5], size, flag;
+  int i=0, offset=0, k =0, number=0, offsetAux[5], size, flag, flag2=0;
   FILE *object, *output;
   char aux[50], auxChar[50], *dump, lable[50];
   codeTable *code=NULL;
   definitionTable *definition=NULL;
   useTable *use=NULL;
   relativeTable *relative=NULL;
+  fpos_t position;
+
   if(argc > 1 )
   {
     offsetAux[0] = 0;
@@ -37,6 +39,7 @@ int main(int argc, char** argv)
     i = 1;
     while(i<argc)
     {
+      flag2=0;
       strcpy(aux,argv[i]);
       size = strlen(aux);
       aux[size] = '.';
@@ -52,13 +55,21 @@ int main(int argc, char** argv)
       fscanf(object, "%c",&auxChar[0]);
   if(auxChar[0]<58 && auxChar[0]>47 )
   {
-    while(!feof(object) && auxChar[0]!='\n' && auxChar[0]!='\r')
+    while(!feof(object) && auxChar[0]=='\n')
     {
       fprintf(output, "%c", auxChar[0]);
       fscanf(object, "%c",&auxChar[0]);
     }
   }else
   {
+    while(!feof(object))
+    {
+      fscanf(object, "%c",&auxChar[0]);
+    }
+    if(auxChar[0]=='\n')
+    {
+      flag2=1;
+    }
       rewind(object);
       fscanf(object, "%s",auxChar);
       while(1)
@@ -139,6 +150,7 @@ int main(int argc, char** argv)
           while(!feof(object))
           {
             fscanf(object, "%s",auxChar);
+            //printf("%s\n", auxChar);
             number = strtol(auxChar,&dump, 10);
             if(code==NULL)
             {
@@ -147,6 +159,27 @@ int main(int argc, char** argv)
             {
               addCodeObj(code, number, offsetAux[i-1]+offset);
             }
+            fgetpos(object, &position);
+            fscanf(object, "%s",auxChar);
+            if(feof(object) && flag2 ==1)
+            {
+              offset++;
+              break;
+            }else if(feof(object) && flag2 ==0)
+            {
+              fscanf(object, "%s",auxChar);
+              number = strtol(auxChar,&dump, 10);
+              if(code==NULL)
+              {
+                code = addCodeObj(code, number, offsetAux[i-1]+offset);
+              }else
+              {
+                addCodeObj(code, number, offsetAux[i-1]+offset);
+              }
+              offset++;
+              break;
+            }
+            fsetpos(object, &position);
             offset++;
           }
           offsetAux[i] = offset+offsetAux[i-1];
@@ -354,11 +387,11 @@ void printEx(codeTable* tab, FILE* output)
   int i = 0;
   while(tab!= NULL)
   {
-    if(tab->address == i)
-    {
+    //if(tab->address == i)
+    //{
       fprintf(output, "%d ", tab->Value);
-      i++;
-    }
+      //i++;
+    //}
     tab=tab->nextItem;
   }
 };
