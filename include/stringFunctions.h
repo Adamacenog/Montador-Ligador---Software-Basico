@@ -1,7 +1,7 @@
 /*
 Propriedade de:
 Andre Garrido Damaceno.- mat. 15/0117531
-Jônatas Senna - mat.
+Jônatas Senna - mat. 14/0090983
 */
 
 int StringContains(char *, char, int); // Verifica a quantidade de vezes que um item aparece na string

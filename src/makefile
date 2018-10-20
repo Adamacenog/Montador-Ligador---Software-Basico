@@ -22,10 +22,10 @@ $(ODIR)/%.o: %.c $(DEPS)
 all: clean montador ligador
 
 montador: $(OBJ)
-	gcc -std=c99 -g -o $@ $^ $(CFLAGS) $(LIBS)
+	gcc -std=c99  -o $@ $^ $(CFLAGS) $(LIBS)
 
 ligador: $(OBJ2)
-	gcc -std=c99 -g  -o $@ $^ $(CFLAGS) $(LIBS)
+	gcc -std=c99   -o $@ $^ $(CFLAGS) $(LIBS)
 
 .PHONY: clean
 

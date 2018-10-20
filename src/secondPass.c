@@ -1,3 +1,8 @@
+/*
+Propriedade de:
+Andre Garrido Damaceno.- mat. 15/0117531
+Jônatas Senna - mat. 14/0090983
+*/
 #ifndef _Primary_libraries
   #define _Primary_libraries
     #include <stdio.h>
@@ -395,7 +400,7 @@ void locateError(objCode* codeList, objCode* code, symbolTable *symbols, constTa
             if(!isSpaceNum(strtol(code->Operator2, &dump,10), codeList))
               printf("Erro semântico na linha: %d.\n", code->LineCounter);
           }
-        }        
+        }
         break;
 
       case 11://alterar const

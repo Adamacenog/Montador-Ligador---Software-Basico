@@ -1,9 +1,14 @@
 # Montador-Ligador---Software-Basico
 Trabalho 1 da matéria de Software Básico da UnB.
 
+Alunos:
+Andre Garrido Damaceno.- mat. 15/0117531
+Jônatas Senna - mat. 14/0090983
+
+
 Como compilar:
 
-* Crie a pasta ./Montador-Ligador---Software-Basico/src/obj 
+* Crie a pasta ./Montador-Ligador---Software-Basico/src/obj
 * Abra ./Montador-Ligador---Software-Basico/src/ no terminal
 * Digite 'make' isso irá compilar o projeto inteiro (montador e ligador)
 * Para compilar apenas o montador, digite 'make montador'
