@@ -367,42 +367,51 @@ void locateError(objCode* codeList, objCode* code, symbolTable *symbols, constTa
 
       break;
       case 9:  // Copy (operator 1 pode ser const ou space, operator 2 só pode ser space)
-        flag = findSymbol(symbols, code->Operator1);
-        if(flag >= 0)
+        if(!isSymbolExtern(symbols, code->Operator1))
         {
-           if(findIlegalJump(code->Operator1, symbols, codeList))
-            printf("Erro semântico na linha: %d.\n", code->LineCounter);
-        }
-        else
-        {
-          if(findIlegalJumpNum(strtol(code->Operator1, &dump,10), codeList))
-            printf("Erro semântico na linha: %d.\n", code->LineCounter);
+          flag = findSymbol(symbols, code->Operator1);
+          if(flag >= 0)
+          {
+             if(findIlegalJump(code->Operator1, symbols, codeList))
+              printf("Erro semântico na linha: %d.\n", code->LineCounter);
+          }
+          else
+          {
+            if(findIlegalJumpNum(strtol(code->Operator1, &dump,10), codeList))
+              printf("Erro semântico na linha: %d.\n", code->LineCounter);
+          }
         }
 
-        flag = findSymbol(symbols, code->Operator2);
-        if(flag >= 0)
+        if(!isSymbolExtern(symbols, code->Operator2))
         {
-           if(!isSpace(code->Operator2, symbols, codeList))
-            printf("Erro semântico na linha: %d.\n", code->LineCounter);
-        }
-        else
-        {
-          if(!isSpaceNum(strtol(code->Operator2, &dump,10), codeList))
-            printf("Erro semântico na linha: %d.\n", code->LineCounter);
-        }
+          flag = findSymbol(symbols, code->Operator2);
+          if(flag >= 0)
+          {
+             if(!isSpace(code->Operator2, symbols, codeList))
+              printf("Erro semântico na linha: %d.\n", code->LineCounter);
+          }
+          else
+          {
+            if(!isSpaceNum(strtol(code->Operator2, &dump,10), codeList))
+              printf("Erro semântico na linha: %d.\n", code->LineCounter);
+          }
+        }        
         break;
 
       case 11://alterar const
-        flag = findSymbol(symbols, code->Operator1);
-        if(flag >= 0)
+        if(!isSymbolExtern(symbols, code->Operator1))
         {
-           if(!isSpace(code->Operator1, symbols, codeList))
-            printf("Erro semântico na linha: %d.\n", code->LineCounter);
-        }
-        else
-        {
-          if(!isSpaceNum(strtol(code->Operator1, &dump,10), codeList))
-            printf("Erro semântico na linha: %d.\n", code->LineCounter);
+          flag = findSymbol(symbols, code->Operator1);
+          if(flag >= 0)
+          {
+             if(!isSpace(code->Operator1, symbols, codeList))
+              printf("Erro semântico na linha: %d.\n", code->LineCounter);
+          }
+          else
+          {
+            if(!isSpaceNum(strtol(code->Operator1, &dump,10), codeList))
+              printf("Erro semântico na linha: %d.\n", code->LineCounter);
+          }
         }
         break;
   }
@@ -527,6 +536,21 @@ int isSpaceNum(int address, objCode* codeList)
       return 1;
 
     code = code->nextLine;
+  }
+  return 0;
+}
+
+int isSymbolExtern(symbolTable *symbols, char* Lable)
+{
+  symbolTable *aux;
+
+  aux = symbols;
+  while(aux != NULL)
+  {
+    if(!strcmp(aux->Label, Lable) && aux->isExtern)
+      return 1;
+
+    aux = aux->nextItem;
   }
   return 0;
 }
