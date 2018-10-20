@@ -16,9 +16,9 @@ Jônatas Senna - mat.
     #include <ligador.h>
 #endif
 
-int main()
+int main(int argc, char** argv)
 {
-  int i=0, offset=0, k =0, number=0, offsetAux[5];
+  int i=0, offset=0, k =0, number=0, offsetAux[5], size, flag;
   FILE *object, *output;
   char aux[50], auxChar[50], *dump, lable[50];
   codeTable *code=NULL;
@@ -28,24 +28,29 @@ int main()
 
   offsetAux[0] = 0;
   strcpy(aux, argv[1]);
-  aux[strlen(aux)+1] = '.';
-  aux[strlen(aux)+2] = 'e';
-  aux[strlen(aux)+3] = '\0';
+  size = strlen(aux);
+  aux[size] = '.';
+  aux[size+1] = 'e';
+  aux[size+2] = '\0';
   output = fopen(aux, "w");
-  for(i=1;i++;i<argc)
+  i = 1;
+  while(i<argc)
   {
     strcpy(aux,argv[i]);
-    aux[strlen(aux)+1] = '.';
-    aux[strlen(aux)+2] = 'e';
-    aux[strlen(aux)+3] = '\0';
+    size = strlen(aux);
+    aux[size] = '.';
+    aux[size+1] = 'o';
+    aux[size+2] = 'b';
+    aux[size+3] = 'j';
+    aux[size+4] = '\0';
     object=fopen(aux, "r");
-    fscanf(object, "%c",&auxChar);
-if(auxChar<58 && auxChar>47 )
+    fscanf(object, "%c",&auxChar[0]);
+if(auxChar[0]<58 && auxChar[0]>47 )
 {
-  while(!feof(object) || auxChar=='\n')
+  while(!feof(object) || auxChar[0]=='\n')
   {
-    fprintf(output, "%c", auxChar);
-    fscanf(object, "%c",&auxChar);
+    fprintf(output, "%c", auxChar[0]);
+    fscanf(object, "%c",&auxChar[0]);
   }
 }else
 {
@@ -58,9 +63,13 @@ if(auxChar<58 && auxChar>47 )
         fscanf(object, "%s",auxChar);
         if(!strcmp(auxChar,"USE"))
         {
-          while(strcmp(auxChar,"TABLE"))
+          flag=0;
+          while(!(!strcmp(auxChar,"TABLE")))
           {
-            fscanf(object, "%s",auxChar);
+            if(flag==0)
+            {
+              fscanf(object, "%s",auxChar);
+            }
             strcpy(lable, auxChar);
             fscanf(object, "%s",auxChar);
             number = strtol(auxChar,&dump, 10);
@@ -71,12 +80,19 @@ if(auxChar<58 && auxChar>47 )
             {
               addUse(use, lable, number+offsetAux[i-1]);
             }
+            fscanf(object, "%s",auxChar);
+            flag=1;
+
           }
         }else if(!strcmp(auxChar,"DEFINITION"))
         {
-          while(strcmp(auxChar,"RELATIVE"))
+          flag=0;
+          while(!(!strcmp(auxChar,"RELATIVE")))
           {
-            fscanf(object, "%s",auxChar);
+            if(flag==0)
+            {
+              fscanf(object, "%s",auxChar);
+            }
             strcpy(lable, auxChar);
             fscanf(object, "%s",auxChar);
             number = strtol(auxChar,&dump, 10);
@@ -87,13 +103,19 @@ if(auxChar<58 && auxChar>47 )
             {
               addDefinition(definition, lable, number+offsetAux[i-1]);
             }
+            fscanf(object, "%s",auxChar);
+            flag=1;
           }
         }
       }else if(!strcmp(auxChar,"RELATIVE"))
       {
-        while(strcmp(auxChar,"CODES"))
+        flag=0;
+        while(!(!strcmp(auxChar,"CODE")))
         {
-          fscanf(object, "%s",auxChar);
+          if(flag==0)
+          {
+            fscanf(object, "%s",auxChar);
+          }
           number = strtol(auxChar,&dump, 10);
           if(relative==NULL)
           {
@@ -102,8 +124,11 @@ if(auxChar<58 && auxChar>47 )
           {
              addRelative(relative, number+offsetAux[i-1]);
           }
+          fscanf(object, "%s",auxChar);
+          flag=1;
+
         }
-      }else if(!strcmp(auxChar,"CODES"))
+      }else if(!strcmp(auxChar,"CODE"))
       {
         offset=0;
         while(!feof(object))
@@ -120,14 +145,16 @@ if(auxChar<58 && auxChar>47 )
           offset++;
         }
         offsetAux[i] = offset;
+        break;
       }
 }
 
 }
     fclose(object);
+    i++;
   }
   swapDefInUse(use, definition, code);
-  makeRelative(code, relative, offsetAux);
+  //makeRelative(code, relative, offsetAux);
   printEx(code, output);
   fclose(output);
   dropCodeObj(code);
@@ -142,7 +169,7 @@ codeTable* addCodeObj(codeTable* tab, int value, int address)
   codeTable *aux;
   aux = malloc(sizeof(codeTable));
   aux->nextItem = NULL;
-  aux->value= value;
+  aux->Value= value;
   aux->address=address;
   if(tab==NULL)
   {
@@ -194,7 +221,7 @@ useTable* addUse(useTable* tab, char* lable, int address)
     tab->nextItem = aux;
   }
 };
-relativeTable* addRelative(relativeTable* tab, int address);
+relativeTable* addRelative(relativeTable* tab, int address)
 {
   relativeTable *aux;
   aux = malloc(sizeof(relativeTable));
@@ -242,7 +269,7 @@ void dropUse(useTable* tab)
     tab=aux;
   }
 };
-void dropRelative(relativeTable*tab);
+void dropRelative(relativeTable*tab)
 {
   relativeTable *aux;
   while(tab!= NULL)
@@ -255,7 +282,7 @@ void dropRelative(relativeTable*tab);
 void swapDefInUse(useTable* use, definitionTable* definition, codeTable* code)
 {
   definitionTable *aux = definition;
-  codeTable *auxCode=code;
+  codeTable *auxCode = code;
   while(use != NULL)
   {
     aux=definition;
@@ -263,29 +290,30 @@ void swapDefInUse(useTable* use, definitionTable* definition, codeTable* code)
     {
       aux=aux->nextItem; //acha a lable utilizada na tabela de definições
     }
-    auxCode=code
+    auxCode=code;
     while(auxCode->address != use->address)
     {
-      auxcode = auxCode->nextItem; //acha o endereço de use na tabla code
+      auxCode = auxCode->nextItem; //acha o endereço de use na tabla code
     }
-    auxCode->value = aux->address; // substitui o valor pelo valor do endereço na tabela definition
+    auxCode->Value = aux->address; // substitui o valor pelo valor do endereço na tabela definition
     use=use->nextItem;//para todos os uses
   }
 };
 void makeRelative(codeTable* code, relativeTable* relative, int* offset)
 {
   codeTable *auxCode=code;
+  int i = 0;
   while(relative != NULL)
   {
     while(auxCode->address != relative->address)
     {
-      auxcode = auxCode->nextItem; //acha o endereço de relative na tabla code
+      auxCode = auxCode->nextItem; //acha o endereço de relative na tabla code
     }
     for(i=0;i<4;i++) // descobre qual é o offset
     {
       if(auxCode->address>offset[i] && auxCode->address<offset[i+1])
       {
-        auxCode->value += offset[i]; //seta o offset
+        auxCode->Value += offset[i]; //seta o offset
       }
     }
     relative = relative->nextItem;//para todo relative
@@ -296,7 +324,7 @@ void printEx(codeTable* tab, FILE* output)
 {
   while(tab!= NULL)
   {
-    fprintf(output, "%d ", tab->value);
+    fprintf(output, "%d ", tab->Value);
     tab=tab->nextItem;
   }
 };

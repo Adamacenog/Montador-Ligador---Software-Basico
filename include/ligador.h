@@ -9,6 +9,7 @@ Jônatas Senna - mat.
 typedef struct UseTable
 {
     char lable[50];
+    int address;
     struct UseTable *nextItem;
 } useTable;
 
@@ -33,10 +34,10 @@ typedef struct RelativeTable
     struct RelativeTable *nextItem;
 } relativeTable;
 
-void addCodeObj(codeTable* tab, int value, int address);
-void addDefinition(definitionTable* tab, char* lable, int address);
-void addUse(useTable* tab, char* lable, int address);
-void addRelative(relativeTable*tab, int address);
+codeTable* addCodeObj(codeTable* tab, int value, int address);
+definitionTable* addDefinition(definitionTable* tab, char* lable, int address);
+useTable* addUse(useTable* tab, char* lable, int address);
+relativeTable* addRelative(relativeTable* tab, int address);
 void dropCodeObj(codeTable* tab);
 void dropDefinition(definitionTable* tab);
 void dropUse(useTable* tab);
