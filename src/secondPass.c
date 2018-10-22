@@ -57,11 +57,11 @@ void DoSecondPass(char* argv, objCode* codes, symbolTable* symbols, definitionTa
         aux = codes;
         while(aux != NULL)
         {
-          if(strstr(aux->Operator1,aux3->Label)!= NULL)
+          if(strcmp(aux->Operator1,aux3->Label) == 0)
           {
             fprintf(saida,"%s %d\n", aux3->Label, aux->Operator1LocationCouter);
           }
-          if(strstr(aux->Operator2,aux3->Label)!= NULL)
+          if(strcmp(aux->Operator2,aux3->Label)==0)
           {
             fprintf(saida,"%s %d\n", aux3->Label, aux->Operator2LocationCouter);
           }
