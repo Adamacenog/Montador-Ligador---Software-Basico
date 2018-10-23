@@ -34,7 +34,7 @@ Jônatas Senna - mat. 14/0090983
 void DoSecondPass(char* argv, objCode* codes, symbolTable* symbols, definitionTable* definitions, int isModule)
 {
   FILE  *saida;
-  char line[500], lineOld[500], instruction[50], *dump, flag2=0, flag=0, label[50];
+  char line[500], lineOld[500], instruction[50], backuplabel[51], *dump, flag2=0, flag=0, label[50];
   int number=0, number2=0, i=0,j=0, k=0;
   int *printVector;
   objCode* aux;
@@ -57,14 +57,20 @@ void DoSecondPass(char* argv, objCode* codes, symbolTable* symbols, definitionTa
         aux = codes;
         while(aux != NULL)
         {
+          CopyString(aux->Operator1, backuplabel, 51);
+          GetLabelFromSum(aux->Operator1, 51);
           if(strcmp(aux->Operator1,aux3->Label) == 0)
           {
             fprintf(saida,"%s %d\n", aux3->Label, aux->Operator1LocationCouter);
           }
+          CopyString(backuplabel, aux->Operator1, 51);
+          CopyString(aux->Operator2, backuplabel, 51);
+          GetLabelFromSum(aux->Operator1, 51);
           if(strcmp(aux->Operator2,aux3->Label)==0)
           {
             fprintf(saida,"%s %d\n", aux3->Label, aux->Operator2LocationCouter);
           }
+          CopyString(backuplabel, aux->Operator2, 51);
           aux = aux->nextLine;
         }
       }
